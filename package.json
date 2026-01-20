@@ -1,0 +1,39 @@
+{
+  "name": "santoninonz-devotees",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "deploy": "next build && touch out/.nojekyll",
+    "generate-types": "npx supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/database.types.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SantoNinoNZ/devotees.git"
+  },
+  "homepage": "https://santoninonz.github.io/devotees/",
+  "dependencies": {
+    "@ant-design/icons": "^5.6.0",
+    "@supabase/supabase-js": "^2.90.1",
+    "antd": "^5.24.0",
+    "date-fns": "^4.1.0",
+    "next": "^16.1.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "rrule": "^2.8.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.1.4",
+    "postcss": "^8.5.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0"
+  }
+}
