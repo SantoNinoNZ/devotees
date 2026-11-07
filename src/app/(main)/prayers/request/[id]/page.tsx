@@ -1,8 +1,9 @@
 import RequestDetail from './RequestDetail';
 
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
-  // No paths pre-generated - navigation works via client-side routing
-  return [];
+  return [{ id: 'preview' }];
 }
 
 export default function RequestDetailPage() {
