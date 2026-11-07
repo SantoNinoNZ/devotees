@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Santo Niño NZ Devotees — Community Prototype</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      background-color: #f0f2f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .custom-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .video-container {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+    .video-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+  </style>
+</head>
+<body class="text-slate-800">
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+      <!-- Left: Logo & Search -->
+      <div class="flex items-center space-x-3">
+        <a href="#" class="flex items-center space-x-2">
+          <span class="text-2xl text-amber-500">👑</span>
+          <span class="font-bold text-lg text-red-700 tracking-tight hidden sm:inline">Santo Niño NZ</span>
+          <span class="font-bold text-lg text-red-700 tracking-tight sm:hidden">SN Devotees</span>
+        </a>
+        <div class="relative hidden md:block">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-sm"></i>
+          <input type="text" placeholder="Search prayers, events, devotees..." class="bg-slate-100 rounded-full pl-9 pr-4 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-red-500">
+        </div>
+      </div>
+
+      <!-- Center: Desktop Nav Shortcuts -->
+      <div class="hidden md:flex items-center space-x-1 lg:space-x-8">
+        <button onclick="switchTab('feed')" id="top-feed" class="py-3 px-4 text-red-600 border-b-2 border-red-600 font-semibold flex items-center space-x-2">
+          <i class="fa-solid fa-house"></i>
+          <span class="hidden lg:inline">Feed</span>
+        </button>
+        <button onclick="switchTab('events')" id="top-events" class="py-3 px-4 text-slate-500 hover:text-slate-900 border-b-2 border-transparent font-medium flex items-center space-x-2">
+          <i class="fa-solid fa-calendar-days"></i>
+          <span class="hidden lg:inline">Events</span>
+        </button>
+        <button onclick="switchTab('prayers')" id="top-prayers" class="py-3 px-4 text-slate-500 hover:text-slate-900 border-b-2 border-transparent font-medium flex items-center space-x-2">
+          <i class="fa-solid fa-hands-praying"></i>
+          <span class="hidden lg:inline">Novena</span>
+        </button>
+      </div>
+
+      <!-- Right: User & Actions -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <button onclick="openPostModal('prayer')" class="bg-red-50 hover:bg-red-100 text-red-700 text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full flex items-center space-x-1">
+          <i class="fa-solid fa-plus text-xs"></i>
+          <span>Prayer Request</span>
+        </button>
+        <button class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center relative">
+          <i class="fa-solid fa-bell"></i>
+          <span class="absolute top-1 right-1 w-2 h-2 bg-red-600 rounded-full"></span>
+        </button>
+        <div class="flex items-center space-x-2 pl-1 cursor-pointer" onclick="switchTab('profile')">
+          <div class="w-9 h-9 rounded-full bg-red-700 text-white font-bold flex items-center justify-center text-sm ring-2 ring-amber-400">
+            EM
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-2 sm:px-4 py-4 grid grid-cols-1 md:grid-cols-12 gap-5">
+
+    <!-- Left Sidebar (Desktop Only) -->
+    <aside class="hidden md:block md:col-span-3 lg:col-span-3 space-y-4">
+      <!-- Quick User Card -->
+      <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-sm flex items-center space-x-3 cursor-pointer" onclick="switchTab('profile')">
+        <div class="w-11 h-11 rounded-full bg-red-700 text-white font-bold flex items-center justify-center text-sm ring-2 ring-amber-400">
+          EM
+        </div>
+        <div>
+          <div class="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+            Elijah Mondero
+            <span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded font-semibold">Devotee</span>
+          </div>
+          <div class="text-xs text-slate-500">North Shore Chapter</div>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="bg-white rounded-xl p-2 border border-slate-200 shadow-sm space-y-1 text-sm font-medium text-slate-700">
+        <button onclick="switchTab('feed')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center space-x-3 text-red-700 font-semibold bg-red-50">
+          <i class="fa-solid fa-newspaper text-red-600 w-5"></i>
+          <span>Community Feed</span>
+        </button>
+        <button onclick="switchTab('events')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center space-x-3">
+          <i class="fa-solid fa-calendar-check text-blue-600 w-5"></i>
+          <span>Mass & Event Schedules</span>
+        </button>
+        <button onclick="openNovenaModal(3)" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center space-x-3">
+          <i class="fa-solid fa-book-bible text-amber-600 w-5"></i>
+          <span>Daily 9-Day Novena</span>
+        </button>
+        <button onclick="alert('House Blessing Booking: You can schedule the Pilgrim Image of Señor Santo Niño to visit your home. Connect with your Hermano coordinator.')" class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 flex items-center space-x-3">
+          <i class="fa-solid fa-house-chimney-window text-emerald-600 w-5"></i>
+          <span>House Blessing Visits</span>
+        </button>
+      </div>
+
+      <!-- Area Chapters -->
+      <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-sm space-y-2 text-sm">
+        <div class="text-xs font-bold uppercase text-slate-400 tracking-wider">Area Chapters</div>
+        <div class="space-y-1 font-medium text-slate-600 text-xs">
+          <div class="px-2 py-1.5 rounded hover:bg-slate-100 flex justify-between cursor-pointer">
+            <span>📍 Auckland Central</span>
+            <span class="text-slate-400">142 members</span>
+          </div>
+          <div class="px-2 py-1.5 rounded hover:bg-slate-100 flex justify-between cursor-pointer text-red-700 font-semibold bg-red-50/50">
+            <span>📍 North Shore Devotees</span>
+            <span class="text-slate-400">89 members</span>
+          </div>
+          <div class="px-2 py-1.5 rounded hover:bg-slate-100 flex justify-between cursor-pointer">
+            <span>📍 West Auckland Chapter</span>
+            <span class="text-slate-400">110 members</span>
+          </div>
+          <div class="px-2 py-1.5 rounded hover:bg-slate-100 flex justify-between cursor-pointer">
+            <span>📍 South Auckland / Pukekohe</span>
+            <span class="text-slate-400">95 members</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ministries & Dance -->
+      <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-sm space-y-2 text-sm">
+        <div class="text-xs font-bold uppercase text-slate-400 tracking-wider">Ministries & Groups</div>
+        <div class="space-y-1 font-medium text-slate-600 text-xs">
+          <div class="px-2 py-1.5 rounded hover:bg-slate-100 flex items-center space-x-2 cursor-pointer">
+            <span class="text-base">💃</span>
+            <span>Sinulog Dance Troupe</span>
+          </div>
+          <div class="px-2 py-1.5 rounded hover:bg-slate-100 flex items-center space-x-2 cursor-pointer">
+            <span class="text-base">🥁</span>
+            <span>Sinulog Drummers & Brass</span>
+          </div>
+          <div class="px-2 py-1.5 rounded hover:bg-slate-100 flex items-center space-x-2 cursor-pointer">
+            <span class="text-base">🛡️</span>
+            <span>Hermano & Hermana Council</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center Feed Stream -->
+    <section class="col-span-1 md:col-span-9 lg:col-span-6 space-y-4 pb-20 md:pb-8">
+
+      <!-- Devotional Stories / Quick Actions Bar -->
+      <div class="bg-white rounded-xl p-3 border border-slate-200 shadow-sm overflow-hidden">
+        <div class="text-xs font-bold text-slate-500 mb-2 flex items-center justify-between">
+          <span>DAILY DEVOTION & STORIES</span>
+          <span class="text-[11px] text-red-600 cursor-pointer" onclick="openNovenaModal(3)">Open Today's Prayer →</span>
+        </div>
+        <div class="flex space-x-2.5 overflow-x-auto pb-1 custom-scrollbar">
+          <!-- Story 1: Today's Novena -->
+          <div onclick="openNovenaModal(3)" class="w-24 h-36 rounded-xl bg-gradient-to-b from-amber-500 to-red-600 p-2 text-white flex flex-col justify-between flex-shrink-0 cursor-pointer shadow hover:opacity-95 transition transform hover:-translate-y-0.5">
+            <div class="w-7 h-7 rounded-full bg-white/25 flex items-center justify-center text-sm font-bold">📿</div>
+            <div>
+              <div class="text-[10px] uppercase font-bold text-amber-200">Novena</div>
+              <div class="text-xs font-bold leading-tight">Day 3 of 9</div>
+              <div class="text-[9px] text-white/90">Petitions</div>
+            </div>
+          </div>
+
+          <!-- Story 2: Daily Gospel -->
+          <div onclick="alert('Daily Gospel: Luke 18:15-17 - Let the little children come to me, and do not hinder them, for the kingdom of God belongs to such as these.')" class="w-24 h-36 rounded-xl bg-gradient-to-b from-blue-500 to-indigo-700 p-2 text-white flex flex-col justify-between flex-shrink-0 cursor-pointer shadow hover:opacity-95 transition transform hover:-translate-y-0.5">
+            <div class="w-7 h-7 rounded-full bg-white/25 flex items-center justify-center text-sm font-bold">📖</div>
+            <div>
+              <div class="text-[10px] uppercase font-bold text-blue-200">Scripture</div>
+              <div class="text-xs font-bold leading-tight">Daily Gospel</div>
+              <div class="text-[9px] text-white/90">Today's Word</div>
+            </div>
+          </div>
+
+          <!-- Story 3: Sinulog Fiesta 2027 Countdown -->
+          <div class="w-24 h-36 rounded-xl bg-gradient-to-b from-rose-500 to-pink-700 p-2 text-white flex flex-col justify-between flex-shrink-0 cursor-pointer shadow hover:opacity-95 transition transform hover:-translate-y-0.5">
+            <div class="w-7 h-7 rounded-full bg-white/25 flex items-center justify-center text-sm font-bold">🎉</div>
+            <div>
+              <div class="text-[10px] uppercase font-bold text-rose-200">Festival</div>
+              <div class="text-xs font-bold leading-tight">Fiesta 2027</div>
+              <div class="text-[9px] text-white/90">68 Days to go</div>
+            </div>
+          </div>
+
+          <!-- Story 4: Add Devotee Story -->
+          <div onclick="openPostModal('general')" class="w-24 h-36 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 p-2 text-slate-500 flex flex-col justify-center items-center flex-shrink-0 cursor-pointer hover:bg-slate-100 transition">
+            <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-sm font-bold mb-1">
+              <i class="fa-solid fa-plus"></i>
+            </div>
+            <div class="text-xs font-semibold text-center text-slate-700 leading-tight">Share Reflection</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post Composer Card -->
+      <div class="bg-white rounded-xl p-3 sm:p-4 border border-slate-200 shadow-sm space-y-3">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-full bg-red-700 text-white font-bold flex items-center justify-center text-sm ring-2 ring-amber-400 flex-shrink-0">
+            EM
+          </div>
+          <button onclick="openPostModal('general')" class="w-full text-left bg-slate-100 hover:bg-slate-200 text-slate-500 px-4 py-2.5 rounded-full text-xs sm:text-sm transition">
+            Share a prayer, reflection, or devotion...
+          </button>
+        </div>
+        <div class="border-t border-slate-100 pt-2.5 flex items-center justify-around text-xs sm:text-sm font-semibold text-slate-600">
+          <button onclick="openPostModal('photo')" class="flex items-center space-x-2 py-1.5 px-3 rounded-lg hover:bg-slate-50 text-emerald-600">
+            <i class="fa-solid fa-image text-base"></i>
+            <span>Photo</span>
+          </button>
+          <button onclick="openPostModal('video')" class="flex items-center space-x-2 py-1.5 px-3 rounded-lg hover:bg-slate-50 text-red-600">
+            <i class="fa-brands fa-youtube text-base"></i>
+            <span>YouTube</span>
+          </button>
+          <button onclick="openPostModal('prayer')" class="flex items-center space-x-2 py-1.5 px-3 rounded-lg hover:bg-slate-50 text-amber-600">
+            <i class="fa-solid fa-hands-praying text-base"></i>
+            <span>Prayer Request</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Feed Item 1: Urgent Prayer Intention Card -->
+      <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <!-- Post Header -->
+        <div class="p-3 sm:p-4 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-700 font-bold flex items-center justify-center text-sm">
+              MC
+            </div>
+            <div>
+              <div class="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                Maria Santos-Cruz
+                <span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded font-semibold">Verified Hermana</span>
+              </div>
+              <div class="text-[11px] text-slate-400">North Shore Chapter • 2 hours ago</div>
+            </div>
+          </div>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-red-100 text-red-800">
+            🙏 Healing Intention
+          </span>
+        </div>
+
+        <!-- Post Content -->
+        <div class="px-3 sm:px-4 pb-3 text-sm text-slate-800 leading-relaxed">
+          Please join our family in praying for my brother Kuya Noel in Cebu who is undergoing surgery tomorrow morning. Asking for Señor Santo Niño’s miraculous healing, steady hands for the surgeons, and complete recovery. Viva Pit Señor!
+        </div>
+
+        <!-- Prayer Counter Bar -->
+        <div class="mx-3 sm:mx-4 mb-2 p-2.5 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-between text-xs text-amber-900">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-base">🙏</span>
+            <span class="font-bold" id="prayer-count-1">42 Devotees joined in prayer</span>
+          </div>
+          <span class="text-[11px] text-amber-700">Will be included in Saturday Novena Mass</span>
+        </div>
+
+        <!-- Post Actions -->
+        <div class="border-t border-slate-100 px-2 py-1.5 flex justify-around text-xs sm:text-sm font-semibold text-slate-600">
+          <button onclick="toggleAmen(1)" id="amen-btn-1" class="flex-1 py-1.5 rounded-lg hover:bg-slate-50 flex items-center justify-center space-x-1.5 text-slate-700 transition">
+            <i class="fa-solid fa-hands-praying text-red-600"></i>
+            <span>Amen / Pray</span>
+          </button>
+          <button onclick="alert('Comment box opened: Write your prayer comment below.')" class="flex-1 py-1.5 rounded-lg hover:bg-slate-50 flex items-center justify-center space-x-1.5">
+            <i class="fa-regular fa-comment text-slate-500"></i>
+            <span>Comment (8)</span>
+          </button>
+          <button onclick="sharePost('Healing Prayer Request for Kuya Noel')" class="flex-1 py-1.5 rounded-lg hover:bg-slate-50 flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-share text-slate-500"></i>
+            <span>Share</span>
+          </button>
+        </div>
+      </article>
+
+      <!-- Feed Item 2: YouTube Video Card (Sinulog Festival Highlights) -->
+      <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <!-- Post Header -->
+        <div class="p-3 sm:p-4 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-red-600 text-white font-bold flex items-center justify-center text-sm">
+              ST
+            </div>
+            <div>
+              <div class="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                Sinulog Auckland Dance Troupe
+                <span class="bg-red-100 text-red-800 text-[10px] px-1.5 py-0.5 rounded font-semibold">Official Ministry</span>
+              </div>
+              <div class="text-[11px] text-slate-400">Yesterday at 4:15 PM • Auckland CBD</div>
+            </div>
+          </div>
+          <span class="text-slate-400 text-sm cursor-pointer"><i class="fa-solid fa-ellipsis"></i></span>
+        </div>
+
+        <!-- Post Content -->
+        <div class="px-3 sm:px-4 pb-3 text-sm text-slate-800 leading-relaxed">
+          Viva Pit Señor! 🥁💃 Relive the joyous moments from our Sinulog street dance practice and festival thanksgiving. Registration is still open for youth dancers and drummers for Sinulog 2027!
+        </div>
+
+        <!-- YouTube Responsive Video Embed (Zero Supabase Storage) -->
+        <div class="px-3 sm:px-4 pb-3">
+          <div class="video-container shadow-inner bg-black">
+            <!-- Embedded Sinulog Devotional Video -->
+            <iframe 
+              src="https://www.youtube-nocookie.com/embed/5qap5aO4i9A" 
+              title="Sinulog Dance Video" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowfullscreen>
+            </iframe>
+          </div>
+          <div class="text-[11px] text-slate-400 mt-1 flex justify-between">
+            <span>Embedded via YouTube (Zero storage cost)</span>
+            <span class="text-red-700 font-semibold cursor-pointer">Watch on YouTube ↗</span>
+          </div>
+        </div>
+
+        <!-- Post Actions -->
+        <div class="border-t border-slate-100 px-2 py-1.5 flex justify-around text-xs sm:text-sm font-semibold text-slate-600">
+          <button onclick="toggleLike(2)" id="like-btn-2" class="flex-1 py-1.5 rounded-lg hover:bg-slate-50 flex items-center justify-center space-x-1.5 text-slate-700">
+            <i class="fa-regular fa-heart text-red-600"></i>
+            <span id="like-text-2">❤️ Care (76)</span>
+          </button>
+          <button class="flex-1 py-1.5 rounded-lg hover:bg-slate-50 flex items-center justify-center space-x-1.5">
+            <i class="fa-regular fa-comment text-slate-500"></i>
+            <span>Comment (14)</span>
+          </button>
+          <button onclick="sharePost('Sinulog Auckland Dance Troupe Video')" class="flex-1 py-1.5 rounded-lg hover:bg-slate-50 flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-share text-slate-500"></i>
+            <span>Share (22)</span>
+          </button>
+        </div>
+      </article>
+
+      <!-- Feed Item 3: Event & Schedule Announcement Card -->
+      <article class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <!-- Post Header -->
+        <div class="p-3 sm:p-4 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center justify-center text-sm">
+              👑
+            </div>
+            <div>
+              <div class="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                Hermano Major 2026
+                <span class="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded font-semibold">Official Announcement</span>
+              </div>
+              <div class="text-[11px] text-slate-400">St Patrick’s Cathedral Parish • 1 day ago</div>
+            </div>
+          </div>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-800">
+            📅 Community Mass
+          </span>
+        </div>
+
+        <!-- Post Content -->
+        <div class="px-3 sm:px-4 pb-3 text-sm text-slate-800 leading-relaxed">
+          Devotees are warmly invited to the Monthly Santo Niño Novena Mass & Fellowship. Bring your Sto. Niño images for blessing right after the holy mass. Potluck fellowship follows at the parish hall.
+        </div>
+
+        <!-- Event Detail Box -->
+        <div class="mx-3 sm:mx-4 mb-3 p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-start space-x-3">
+            <div class="w-12 h-12 rounded-lg bg-red-700 text-white flex flex-col items-center justify-center flex-shrink-0">
+              <span class="text-[10px] uppercase font-bold tracking-wider">NOV</span>
+              <span class="text-lg font-bold leading-none">14</span>
+            </div>
+            <div>
+              <div class="font-bold text-sm text-slate-900">Saturday Novena Mass & Blessing</div>
+              <div class="text-xs text-slate-500">5:30 PM • St Benedict's Church, Newton, Auckland</div>
+              <div class="text-xs text-emerald-700 font-semibold mt-0.5">38 Devotees Going</div>
+            </div>
+          </div>
+          <button onclick="toggleRSVP(3)" id="rsvp-btn-3" class="bg-red-700 hover:bg-red-800 text-white font-semibold text-xs px-4 py-2 rounded-lg transition flex-shrink-0">
+            ✓ RSVP Going
+          </button>
+        </div>
+
+        <!-- Post Actions -->
+        <div class="border-t border-slate-100 px-2 py-1.5 flex justify-around text-xs sm:text-sm font-semibold text-slate-600">
+          <button class="flex-1 py-1.5 rounded-lg hover:bg-slate-50 flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-hands-praying text-red-600"></i>
+            <span>Amen (51)</span>
+          </button>
+          <button class="flex-1 py-1.5 rounded-lg hover:bg-slate-50 flex items-center justify-center space-x-1.5">
+            <i class="fa-regular fa-comment text-slate-500"></i>
+            <span>Comment (6)</span>
+          </button>
+          <button onclick="sharePost('Saturday Novena Mass & Sto. Niño Blessing')" class="flex-1 py-1.5 rounded-lg hover:bg-slate-50 flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-share text-slate-500"></i>
+            <span>Share</span>
+          </button>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- Right Sidebar: Interactive Devotion & Events Widgets (Desktop Only) -->
+    <aside class="hidden lg:block lg:col-span-3 space-y-4">
+      
+      <!-- Widget 1: Daily Devotion Guide -->
+      <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="text-xs font-bold uppercase text-red-700 tracking-wider flex items-center gap-1.5">
+            <span>📿</span>
+            <span>Daily Devotion</span>
+          </div>
+          <span class="text-[11px] bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded">Day 3 of 9</span>
+        </div>
+        <div>
+          <div class="font-bold text-sm text-slate-900">Novena to Señor Santo Niño</div>
+          <div class="text-xs text-slate-500 mt-1">Petitions for peace in families and health for our overseas workers.</div>
+        </div>
+
+        <!-- 9 Days Progress Dots -->
+        <div class="grid grid-cols-9 gap-1 pt-1">
+          <div class="h-2 rounded-full bg-red-600" title="Day 1 Complete"></div>
+          <div class="h-2 rounded-full bg-red-600" title="Day 2 Complete"></div>
+          <div class="h-2 rounded-full bg-red-600 ring-2 ring-red-300" title="Day 3 Today"></div>
+          <div class="h-2 rounded-full bg-slate-200" title="Day 4"></div>
+          <div class="h-2 rounded-full bg-slate-200" title="Day 5"></div>
+          <div class="h-2 rounded-full bg-slate-200" title="Day 6"></div>
+          <div class="h-2 rounded-full bg-slate-200" title="Day 7"></div>
+          <div class="h-2 rounded-full bg-slate-200" title="Day 8"></div>
+          <div class="h-2 rounded-full bg-slate-200" title="Day 9"></div>
+        </div>
+
+        <button onclick="openNovenaModal(3)" class="w-full bg-red-700 hover:bg-red-800 text-white font-semibold text-xs py-2 rounded-lg transition flex items-center justify-center space-x-1.5">
+          <i class="fa-solid fa-book-open"></i>
+          <span>Pray Today’s Novena</span>
+        </button>
+      </div>
+
+      <!-- Widget 2: Upcoming Calendar Events -->
+      <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase text-slate-400 tracking-wider">Upcoming Calendar</span>
+          <a href="#" onclick="switchTab('events')" class="text-xs text-red-700 font-semibold hover:underline">View All</a>
+        </div>
+        <div class="space-y-3 text-xs">
+          <div class="flex items-start space-x-2.5">
+            <div class="w-10 h-10 rounded bg-red-50 text-red-700 border border-red-200 flex flex-col items-center justify-center font-bold flex-shrink-0">
+              <span class="text-[9px]">NOV</span>
+              <span class="text-sm leading-none">14</span>
+            </div>
+            <div>
+              <div class="font-bold text-slate-900">Saturday Novena Mass</div>
+              <div class="text-slate-500">5:30 PM • St Benedict's</div>
+              <span class="text-emerald-700 font-semibold text-[10px]">✓ You're Going</span>
+            </div>
+          </div>
+
+          <div class="flex items-start space-x-2.5">
+            <div class="w-10 h-10 rounded bg-slate-50 text-slate-700 border border-slate-200 flex flex-col items-center justify-center font-bold flex-shrink-0">
+              <span class="text-[9px]">NOV</span>
+              <span class="text-sm leading-none">15</span>
+            </div>
+            <div>
+              <div class="font-bold text-slate-900">Sinulog Dance Practice</div>
+              <div class="text-slate-500">2:00 PM • Cathedral Hall</div>
+              <span class="text-slate-400 text-[10px]">24 Dancers attending</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Widget 3: Live Community Intentions Stream -->
+      <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase text-slate-400 tracking-wider">Urgent Intentions</span>
+          <button onclick="openPostModal('prayer')" class="text-xs text-red-700 font-semibold hover:underline">+ Request</button>
+        </div>
+        <div class="space-y-2 text-xs">
+          <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+            <div class="font-semibold text-slate-900">Healing for Kuya Noel</div>
+            <div class="text-slate-500 text-[11px] mt-0.5">Undergoing surgery in Cebu tomorrow.</div>
+            <div class="mt-2 flex justify-between items-center">
+              <span class="text-amber-800 font-semibold text-[10px]">🙏 42 Devotees</span>
+              <button onclick="toggleAmen(1)" class="text-red-700 font-bold hover:underline text-[11px]">I Prayed</button>
+            </div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+            <div class="font-semibold text-slate-900">Thanksgiving for Visa Approval</div>
+            <div class="text-slate-500 text-[11px] mt-0.5">Santos family granted permanent residency.</div>
+            <div class="mt-2 flex justify-between items-center">
+              <span class="text-amber-800 font-semibold text-[10px]">🙏 68 Devotees</span>
+              <button onclick="alert('You joined in thanksgiving!')" class="text-red-700 font-bold hover:underline text-[11px]">I Prayed</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- Mobile Bottom Navigation (4-Tab Streamlined) -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 px-4 py-2 flex justify-around items-center text-xs font-medium text-slate-500 shadow-lg">
+    <button onclick="switchTab('feed')" id="bot-feed" class="flex flex-col items-center text-red-700 font-semibold">
+      <i class="fa-solid fa-house text-lg"></i>
+      <span class="text-[10px] mt-0.5">Feed</span>
+    </button>
+    <button onclick="switchTab('events')" id="bot-events" class="flex flex-col items-center hover:text-slate-900">
+      <i class="fa-solid fa-calendar-days text-lg"></i>
+      <span class="text-[10px] mt-0.5">Events</span>
+    </button>
+    <button onclick="switchTab('prayers')" id="bot-prayers" class="flex flex-col items-center hover:text-slate-900">
+      <i class="fa-solid fa-hands-praying text-lg"></i>
+      <span class="text-[10px] mt-0.5">Novena</span>
+    </button>
+    <button onclick="switchTab('menu')" id="bot-menu" class="flex flex-col items-center hover:text-slate-900">
+      <i class="fa-solid fa-bars text-lg"></i>
+      <span class="text-[10px] mt-0.5">Menu</span>
+    </button>
+  </nav>
+
+  <!-- MODAL: Post Composer -->
+  <div id="post-modal" class="fixed inset-0 z-50 bg-black/50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-4 sm:p-5 space-y-4 shadow-xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-slate-900 text-base" id="post-modal-title">Create Community Post</h3>
+        <button onclick="closePostModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-full bg-red-700 text-white font-bold flex items-center justify-center text-sm">
+          EM
+        </div>
+        <div>
+          <div class="font-bold text-sm text-slate-900">Elijah Mondero</div>
+          <div class="text-xs text-slate-400">Public • North Shore Chapter</div>
+        </div>
+      </div>
+      <textarea id="post-content" rows="4" placeholder="What reflection, prayer, or festival update would you like to share with the community?" class="w-full text-sm text-slate-800 placeholder-slate-400 focus:outline-none resize-none"></textarea>
+      
+      <!-- Video / YouTube Link Input (if video selected) -->
+      <div id="youtube-input-row" class="hidden p-3 bg-red-50 rounded-xl space-y-1.5 border border-red-200">
+        <label class="text-xs font-bold text-red-900 flex items-center gap-1.5">
+          <i class="fa-brands fa-youtube text-red-600"></i>
+          <span>YouTube or Shorts URL (Free Streaming)</span>
+        </label>
+        <input type="text" id="youtube-url" placeholder="Paste YouTube link e.g. https://youtu.be/..." class="w-full text-xs bg-white border border-red-200 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-red-500">
+      </div>
+
+      <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+        <div class="flex space-x-2 text-slate-500">
+          <button onclick="toggleYoutubeInput()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-red-600 flex items-center justify-center" title="Add YouTube Video">
+            <i class="fa-brands fa-youtube"></i>
+          </button>
+          <button onclick="alert('Photo Picker: Client-side WebP compression (< 300KB) enabled to protect Supabase Free Tier.')" class="w-8 h-8 rounded-full hover:bg-slate-100 text-emerald-600 flex items-center justify-center" title="Add Photo">
+            <i class="fa-solid fa-image"></i>
+          </button>
+          <button onclick="alert('Category set to Prayer Request!')" class="w-8 h-8 rounded-full hover:bg-slate-100 text-amber-600 flex items-center justify-center" title="Set Prayer Request Category">
+            <i class="fa-solid fa-hands-praying"></i>
+          </button>
+        </div>
+        <button onclick="publishPost()" class="bg-red-700 hover:bg-red-800 text-white font-semibold text-xs px-5 py-2 rounded-full transition">
+          Post to Community
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Interactive Novena Prayer Reader -->
+  <div id="novena-modal" class="fixed inset-0 z-50 bg-black/60 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-5 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2">
+          <span class="text-xl">📿</span>
+          <h3 class="font-bold text-red-800 text-base" id="novena-modal-title">Novena to Señor Santo Niño — Day 3</h3>
+        </div>
+        <button onclick="closeNovenaModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Audio Hymn Simulation -->
+      <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">
+            ▶
+          </div>
+          <div>
+            <div class="font-bold text-xs text-amber-900">Bato Balani sa Gugma (Hymn)</div>
+            <div class="text-[11px] text-amber-700">Audio & Liturgical Chant</div>
+          </div>
+        </div>
+        <span class="text-[11px] text-amber-800 font-semibold cursor-pointer">Listen (Audio)</span>
+      </div>
+
+      <!-- Prayer Text -->
+      <div class="space-y-3 text-sm text-slate-700 leading-relaxed">
+        <h4 class="font-bold text-slate-900">Daily Petition (Day 3):</h4>
+        <p class="italic bg-slate-50 p-3 rounded-lg border-l-4 border-red-700">
+          "O Señor Santo Niño, who in your divine wisdom came into the world as a humble child, teach us humility and purity of heart. Look with mercy upon the families of our community in New Zealand and across our homeland. Grant peace, protection, and renewed faith to our households."
+        </p>
+
+        <h4 class="font-bold text-slate-900">Supplications:</h4>
+        <p>• For our loved ones who are sick: <em>Hear us, O Señor Santo Niño.</em></p>
+        <p>• For strength in our daily work and studies: <em>Hear us, O Señor Santo Niño.</em></p>
+        <p>• For the preservation of our Christian devotion: <em>Hear us, O Señor Santo Niño.</em></p>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row gap-2 justify-between items-center">
+        <button onclick="markNovenaComplete()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-5 py-2.5 rounded-lg flex items-center justify-center space-x-2 transition">
+          <i class="fa-solid fa-check"></i>
+          <span>Mark Day 3 as Completed</span>
+        </button>
+        <button onclick="shareNovenaStreak()" class="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2.5 rounded-lg flex items-center justify-center space-x-2 transition">
+          <i class="fa-solid fa-share-nodes"></i>
+          <span>Share Badge to Feed</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let prayerCount = 42;
+    let isPrayed = false;
+    let isLiked = false;
+    let likeCount = 76;
+    let isRSVP = true;
+
+    function toggleAmen(id) {
+      const countEl = document.getElementById('prayer-count-1');
+      const btnEl = document.getElementById('amen-btn-1');
+      if (!isPrayed) {
+        prayerCount++;
+        isPrayed = true;
+        btnEl.classList.add('text-red-700', 'font-bold');
+        btnEl.innerHTML = '<i class="fa-solid fa-hands-praying text-red-600"></i><span>✓ You Prayed</span>';
+      } else {
+        prayerCount--;
+        isPrayed = false;
+        btnEl.classList.remove('text-red-700', 'font-bold');
+        btnEl.innerHTML = '<i class="fa-solid fa-hands-praying text-red-600"></i><span>Amen / Pray</span>';
+      }
+      countEl.innerText = `${prayerCount} Devotees joined in prayer`;
+    }
+
+    function toggleLike(id) {
+      const btn = document.getElementById('like-btn-2');
+      const text = document.getElementById('like-text-2');
+      if (!isLiked) {
+        likeCount++;
+        isLiked = true;
+        btn.classList.add('text-red-600', 'font-bold');
+        text.innerText = `❤️ You & ${likeCount - 1} Care`;
+      } else {
+        likeCount--;
+        isLiked = false;
+        btn.classList.remove('text-red-600', 'font-bold');
+        text.innerText = `❤️ Care (${likeCount})`;
+      }
+    }
+
+    function toggleRSVP(id) {
+      const btn = document.getElementById('rsvp-btn-3');
+      if (isRSVP) {
+        isRSVP = false;
+        btn.className = 'bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs px-4 py-2 rounded-lg transition flex-shrink-0';
+        btn.innerText = '+ RSVP Going';
+      } else {
+        isRSVP = true;
+        btn.className = 'bg-red-700 hover:bg-red-800 text-white font-semibold text-xs px-4 py-2 rounded-lg transition flex-shrink-0';
+        btn.innerText = '✓ RSVP Going';
+      }
+    }
+
+    function sharePost(title) {
+      if (navigator.share) {
+        navigator.share({
+          title: 'Santo Niño NZ Devotees',
+          text: title,
+          url: window.location.href,
+        }).catch(() => {});
+      } else {
+        alert(`Link copied for "${title}"! You can paste it into Viber, WhatsApp, or Facebook.`);
+      }
+    }
+
+    function openPostModal(mode) {
+      const modal = document.getElementById('post-modal');
+      const title = document.getElementById('post-modal-title');
+      const ytRow = document.getElementById('youtube-input-row');
+      
+      if (mode === 'video') {
+        title.innerText = 'Share YouTube Video with Community';
+        ytRow.classList.remove('hidden');
+      } else if (mode === 'prayer') {
+        title.innerText = 'Submit Prayer Intention';
+        ytRow.classList.add('hidden');
+      } else {
+        title.innerText = 'Create Community Post';
+        ytRow.classList.add('hidden');
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function closePostModal() {
+      document.getElementById('post-modal').classList.add('hidden');
+    }
+
+    function toggleYoutubeInput() {
+      const row = document.getElementById('youtube-input-row');
+      row.classList.toggle('hidden');
+    }
+
+    function publishPost() {
+      const text = document.getElementById('post-content').value;
+      if (!text.trim()) {
+        alert('Please write something before posting!');
+        return;
+      }
+      alert('Post published to Community Feed! (Prototype simulation)');
+      closePostModal();
+      document.getElementById('post-content').value = '';
+    }
+
+    function openNovenaModal(day) {
+      document.getElementById('novena-modal').classList.remove('hidden');
+    }
+
+    function closeNovenaModal() {
+      document.getElementById('novena-modal').classList.add('hidden');
+    }
+
+    function markNovenaComplete() {
+      alert('Day 3 completed! Your novena progress has been recorded.');
+      closeNovenaModal();
+    }
+
+    function shareNovenaStreak() {
+      alert('Shared to feed: "Just completed Day 3 of the Novena to Señor Santo Niño! 📿"');
+      closeNovenaModal();
+    }
+
+    function switchTab(tab) {
+      // Simple tab switcher handler
+      if (tab === 'profile') {
+        alert('Devotee Profile: Showing Maria Cruz / Elijah Mondero faith badges, chapter history, and prayer intentions.');
+      } else if (tab === 'events') {
+        alert('Events Calendar: Displays monthly Sinulog Masses, Sinulog Festival 2027 countdown, and dance rehearsals.');
+      } else if (tab === 'prayers') {
+        openNovenaModal(3);
+      } else if (tab === 'menu') {
+        alert('Menu Hub: House visits booking, area chapter directories, dance troupe registration, and settings.');
+      }
+    }
+  </script>
+</body>
+</html>
