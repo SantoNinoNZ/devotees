@@ -1,6 +1,24 @@
 export * from './database.types';
 
+import type {
+  BadgeDefinition,
+  CommunityPost,
+  CommunityPostComment,
+  CommunityPostReaction,
+  Event,
+  PostReactionType,
+  UserBadge,
+} from './database.types';
+
+// Aliases for convenience
+export type PostReaction = CommunityPostReaction;
+export type PostComment = CommunityPostComment;
+
 // Extended types with relations
+export interface UserBadgeWithDefinition extends UserBadge {
+  definition?: BadgeDefinition | null;
+}
+
 export interface ProfileWithRoles {
   id: string;
   display_name: string;
@@ -21,9 +39,21 @@ export interface ProfileWithRoles {
     dance_group_id: string | null;
     is_active: boolean;
   }[];
+  user_badges?: UserBadgeWithDefinition[];
 }
 
-export interface EventWithCreator {
+export interface EventLiturgicalRoster {
+  presider_name: string | null;
+  presider_id: string | null;
+  choir_name: string | null;
+  choir_group_id: string | null;
+  lectors: string[];
+  acolytes_guild: string | null;
+  sponsor_chapter: string | null;
+  mass_sequence_number: number | null;
+}
+
+export interface EventWithCreator extends Partial<EventLiturgicalRoster> {
   id: string;
   title: string;
   description: string | null;
@@ -45,6 +75,53 @@ export interface EventWithCreator {
     display_name: string;
     avatar_url: string | null;
   } | null;
+}
+
+export interface EventWithRoster extends Event {
+  presider?: {
+    id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+  } | null;
+  choir_group?: {
+    id: string;
+    name: string;
+  } | null;
+}
+
+export interface CommunityPostWithAuthor extends CommunityPost {
+  author?: {
+    id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    user_badges?: UserBadgeWithDefinition[];
+  } | null;
+  event?: (Event & Partial<EventLiturgicalRoster>) | null;
+  reactions?: CommunityPostReaction[];
+  reaction_counts?: {
+    amen: number;
+    heart: number;
+    like: number;
+    total: number;
+  };
+  user_reaction?: PostReactionType | null;
+  comments_count?: number;
+}
+
+export interface CommunityPostCommentWithAuthor extends CommunityPostComment {
+  author?: {
+    id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    user_badges?: UserBadgeWithDefinition[];
+  } | null;
+}
+
+export interface NovenaDayProgress {
+  day_number: number;
+  cycle_year: number;
+  is_completed: boolean;
+  completed_at: string | null;
 }
 
 export interface RequestWithDetails {

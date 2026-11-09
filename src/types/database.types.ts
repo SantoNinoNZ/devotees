@@ -52,6 +52,45 @@ export type RequestStatus =
   | 'completed'
   | 'cancelled';
 
+export type CommunityPostType =
+  | 'general'
+  | 'prayer_request'
+  | 'event'
+  | 'announcement'
+  | 'novena_completion';
+
+export type PostVisibility =
+  | 'public'
+  | 'hermanos_only'
+  | 'members';
+
+export type IntentionCategory =
+  | 'healing'
+  | 'thanksgiving'
+  | 'special'
+  | 'repose';
+
+export type AnnouncementType =
+  | 'general'
+  | 'casting_call'
+  | 'urgent'
+  | 'event';
+
+export type PostReactionType =
+  | 'amen'
+  | 'heart'
+  | 'like';
+
+export type BadgeCategory =
+  | 'clergy'
+  | 'liturgy'
+  | 'performance'
+  | 'pageant'
+  | 'media'
+  | 'partner'
+  | 'devotional'
+  | 'service';
+
 export interface Database {
   public: {
     Tables: {
@@ -191,6 +230,15 @@ export interface Database {
           event_end_time: string | null;
           is_all_day: boolean;
           organizer_id: string | null;
+          // Liturgical roster extensions
+          presider_name: string | null;
+          presider_id: string | null;
+          choir_name: string | null;
+          choir_group_id: string | null;
+          lectors: string[] | null;
+          acolytes_guild: string | null;
+          sponsor_chapter: string | null;
+          mass_sequence_number: number | null;
         };
         Insert: {
           id?: string;
@@ -226,6 +274,14 @@ export interface Database {
           event_end_time?: string | null;
           is_all_day?: boolean;
           organizer_id?: string | null;
+          presider_name?: string | null;
+          presider_id?: string | null;
+          choir_name?: string | null;
+          choir_group_id?: string | null;
+          lectors?: string[] | null;
+          acolytes_guild?: string | null;
+          sponsor_chapter?: string | null;
+          mass_sequence_number?: number | null;
         };
         Update: {
           id?: string;
@@ -261,6 +317,14 @@ export interface Database {
           event_end_time?: string | null;
           is_all_day?: boolean;
           organizer_id?: string | null;
+          presider_name?: string | null;
+          presider_id?: string | null;
+          choir_name?: string | null;
+          choir_group_id?: string | null;
+          lectors?: string[] | null;
+          acolytes_guild?: string | null;
+          sponsor_chapter?: string | null;
+          mass_sequence_number?: number | null;
         };
       };
       requests: {
@@ -547,6 +611,198 @@ export interface Database {
           reviewed_by?: string | null;
         };
       };
+      community_posts: {
+        Row: {
+          id: string;
+          author_id: string;
+          post_type: CommunityPostType;
+          content: string;
+          media_urls: string[];
+          youtube_video_id: string | null;
+          intention_category: IntentionCategory | null;
+          announcement_type: AnnouncementType | null;
+          event_id: string | null;
+          visibility: PostVisibility;
+          is_pinned: boolean;
+          is_hidden: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          author_id: string;
+          post_type?: CommunityPostType;
+          content: string;
+          media_urls?: string[];
+          youtube_video_id?: string | null;
+          intention_category?: IntentionCategory | null;
+          announcement_type?: AnnouncementType | null;
+          event_id?: string | null;
+          visibility?: PostVisibility;
+          is_pinned?: boolean;
+          is_hidden?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          author_id?: string;
+          post_type?: CommunityPostType;
+          content?: string;
+          media_urls?: string[];
+          youtube_video_id?: string | null;
+          intention_category?: IntentionCategory | null;
+          announcement_type?: AnnouncementType | null;
+          event_id?: string | null;
+          visibility?: PostVisibility;
+          is_pinned?: boolean;
+          is_hidden?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      community_post_reactions: {
+        Row: {
+          id: string;
+          post_id: string;
+          user_id: string;
+          reaction_type: PostReactionType;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          post_id: string;
+          user_id: string;
+          reaction_type?: PostReactionType;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          post_id?: string;
+          user_id?: string;
+          reaction_type?: PostReactionType;
+          created_at?: string;
+        };
+      };
+      community_post_comments: {
+        Row: {
+          id: string;
+          post_id: string;
+          author_id: string;
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          post_id: string;
+          author_id: string;
+          content: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          post_id?: string;
+          author_id?: string;
+          content?: string;
+          created_at?: string;
+        };
+      };
+      badge_definitions: {
+        Row: {
+          id: string;
+          name: string;
+          category: BadgeCategory;
+          icon: string;
+          description: string | null;
+          is_repeatable_yearly: boolean;
+          badge_color: string;
+          is_verified_only: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          name: string;
+          category: BadgeCategory;
+          icon: string;
+          description?: string | null;
+          is_repeatable_yearly?: boolean;
+          badge_color?: string;
+          is_verified_only?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          category?: BadgeCategory;
+          icon?: string;
+          description?: string | null;
+          is_repeatable_yearly?: boolean;
+          badge_color?: string;
+          is_verified_only?: boolean;
+          created_at?: string;
+        };
+      };
+      user_badges: {
+        Row: {
+          id: string;
+          user_id: string;
+          badge_id: string;
+          year: number | null;
+          title_override: string | null;
+          organization_or_troupe: string | null;
+          metadata: Json | null;
+          is_featured: boolean;
+          awarded_by: string | null;
+          awarded_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          badge_id: string;
+          year?: number | null;
+          title_override?: string | null;
+          organization_or_troupe?: string | null;
+          metadata?: Json | null;
+          is_featured?: boolean;
+          awarded_by?: string | null;
+          awarded_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          badge_id?: string;
+          year?: number | null;
+          title_override?: string | null;
+          organization_or_troupe?: string | null;
+          metadata?: Json | null;
+          is_featured?: boolean;
+          awarded_by?: string | null;
+          awarded_at?: string;
+        };
+      };
+      novena_progress: {
+        Row: {
+          id: string;
+          user_id: string;
+          day_number: number;
+          cycle_year: number;
+          completed_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          day_number: number;
+          cycle_year: number;
+          completed_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          day_number?: number;
+          cycle_year?: number;
+          completed_at?: string;
+        };
+      };
     };
     Views: {};
     Functions: {};
@@ -562,3 +818,19 @@ export type Event = Database['public']['Tables']['events']['Row'];
 export type Request = Database['public']['Tables']['requests']['Row'];
 export type Novena = Database['public']['Tables']['novenas']['Row'];
 export type Announcement = Database['public']['Tables']['announcements']['Row'];
+export type CommunityPost = Database['public']['Tables']['community_posts']['Row'];
+export type CommunityPostInsert = Database['public']['Tables']['community_posts']['Insert'];
+export type CommunityPostUpdate = Database['public']['Tables']['community_posts']['Update'];
+export type CommunityPostReaction = Database['public']['Tables']['community_post_reactions']['Row'];
+export type CommunityPostReactionInsert = Database['public']['Tables']['community_post_reactions']['Insert'];
+export type CommunityPostComment = Database['public']['Tables']['community_post_comments']['Row'];
+export type CommunityPostCommentInsert = Database['public']['Tables']['community_post_comments']['Insert'];
+export type BadgeDefinition = Database['public']['Tables']['badge_definitions']['Row'];
+export type BadgeDefinitionInsert = Database['public']['Tables']['badge_definitions']['Insert'];
+export type BadgeDefinitionUpdate = Database['public']['Tables']['badge_definitions']['Update'];
+export type UserBadge = Database['public']['Tables']['user_badges']['Row'];
+export type UserBadgeInsert = Database['public']['Tables']['user_badges']['Insert'];
+export type UserBadgeUpdate = Database['public']['Tables']['user_badges']['Update'];
+export type NovenaProgress = Database['public']['Tables']['novena_progress']['Row'];
+export type NovenaProgressInsert = Database['public']['Tables']['novena_progress']['Insert'];
+export type NovenaProgressUpdate = Database['public']['Tables']['novena_progress']['Update'];
