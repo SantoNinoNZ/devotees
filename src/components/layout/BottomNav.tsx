@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -9,81 +10,117 @@ import {
   CalendarFilled,
   HeartOutlined,
   HeartFilled,
-  TeamOutlined,
-  AppstoreOutlined,
-  AppstoreFilled,
+  UserOutlined,
 } from '@ant-design/icons';
 
-const NAV_ITEMS = [
-  {
-    key: '/',
-    label: 'Home',
-    icon: HomeOutlined,
-    activeIcon: HomeFilled,
-    href: '/',
-  },
-  {
-    key: '/events',
-    label: 'Events',
-    icon: CalendarOutlined,
-    activeIcon: CalendarFilled,
-    href: '/events',
-  },
-  {
-    key: '/prayers',
-    label: 'Prayers',
-    icon: HeartOutlined,
-    activeIcon: HeartFilled,
-    href: '/prayers',
-  },
-  {
-    key: '/community',
-    label: 'Community',
-    icon: TeamOutlined,
-    activeIcon: TeamOutlined,
-    href: '/community',
-  },
-  {
-    key: '/more',
-    label: 'More',
-    icon: AppstoreOutlined,
-    activeIcon: AppstoreFilled,
-    href: '/more',
-  },
-];
+export interface BottomNavProps {
+  className?: string;
+  onOpenNovena?: () => void;
+  onOpenProfile?: () => void;
+}
 
-export default function BottomNav() {
+export function BottomNav({
+  className = '',
+  onOpenNovena,
+  onOpenProfile,
+}: BottomNavProps) {
   const pathname = usePathname();
 
-  const isActive = (key: string) => {
-    if (key === '/') return pathname === '/';
-    return pathname.startsWith(key);
+  const handleNovenaClick = (e: React.MouseEvent) => {
+    if (pathname === '/') {
+      e.preventDefault();
+      if (onOpenNovena) {
+        onOpenNovena();
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('sn-open-novena', { detail: { day: 3 } })
+        );
+      }
+    }
   };
 
-  return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 pb-safe">
-      <div className="flex items-center justify-around h-16">
-        {NAV_ITEMS.map((item) => {
-          const active = isActive(item.key);
-          const Icon = active ? item.activeIcon : item.icon;
+  const handleProfileClick = (e: React.MouseEvent) => {
+    if (pathname === '/') {
+      e.preventDefault();
+      if (onOpenProfile) {
+        onOpenProfile();
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('sn-open-honor-ribbons'));
+      }
+    }
+  };
 
-          return (
-            <Link
-              key={item.key}
-              href={item.href}
-              className={`
-                flex flex-col items-center justify-center
-                w-full h-full
-                transition-colors
-                ${active ? 'text-[#B91C1C]' : 'text-gray-500'}
-              `}
-            >
-              <Icon className="text-xl mb-1" />
-              <span className="text-xs">{item.label}</span>
-            </Link>
-          );
-        })}
-      </div>
+  const isFeedActive = pathname === '/';
+  const isEventsActive = pathname.startsWith('/events');
+  const isNovenaActive = pathname.startsWith('/prayers/novena');
+  const isProfileActive = pathname.startsWith('/profile');
+
+  return (
+    <nav
+      className={`md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#EFEAE2] px-4 py-2 flex justify-around items-center text-xs font-semibold shadow-lg pb-safe ${className}`}
+      aria-label="Mobile Bottom Navigation"
+    >
+      {/* 1. Feed */}
+      <Link
+        href="/"
+        className={`flex flex-col items-center no-underline transition-colors ${
+          isFeedActive ? 'text-red-800 font-bold' : 'text-stone-500 hover:text-stone-900'
+        }`}
+      >
+        {isFeedActive ? (
+          <HomeFilled className="text-xl" />
+        ) : (
+          <HomeOutlined className="text-xl" />
+        )}
+        <span className="text-[10px] mt-0.5 font-cinzel tracking-wider">Feed</span>
+      </Link>
+
+      {/* 2. Events */}
+      <Link
+        href="/events"
+        className={`flex flex-col items-center no-underline transition-colors ${
+          isEventsActive ? 'text-red-800 font-bold' : 'text-stone-500 hover:text-stone-900'
+        }`}
+      >
+        {isEventsActive ? (
+          <CalendarFilled className="text-xl" />
+        ) : (
+          <CalendarOutlined className="text-xl" />
+        )}
+        <span className="text-[10px] mt-0.5 font-cinzel tracking-wider">Events</span>
+      </Link>
+
+      {/* 3. Novena */}
+      <Link
+        href="/prayers/novena"
+        onClick={handleNovenaClick}
+        className={`flex flex-col items-center no-underline transition-colors ${
+          isNovenaActive ? 'text-red-800 font-bold' : 'text-stone-500 hover:text-stone-900'
+        }`}
+      >
+        {isNovenaActive ? (
+          <HeartFilled className="text-xl text-red-700" />
+        ) : (
+          <HeartOutlined className="text-xl" />
+        )}
+        <span className="text-[10px] mt-0.5 font-cinzel tracking-wider">Novena</span>
+      </Link>
+
+      {/* 4. Profile */}
+      <Link
+        href="/profile"
+        onClick={handleProfileClick}
+        className={`flex flex-col items-center no-underline transition-colors ${
+          isProfileActive ? 'text-red-800 font-bold' : 'text-stone-500 hover:text-stone-900'
+        }`}
+      >
+        <UserOutlined className="text-xl" />
+        <span className="text-[10px] mt-0.5 font-cinzel tracking-wider">Profile</span>
+      </Link>
     </nav>
   );
 }
+
+export default BottomNav;
