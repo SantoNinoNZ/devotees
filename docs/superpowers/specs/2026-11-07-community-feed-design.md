@@ -130,6 +130,9 @@ Community devotion and Sinulog festival engagement span years of volunteerism, p
 | **Clergy & Liturgy** | **Bishop / Priest** | No (Standing) | ✝️ | Ordained celebrants presiding over Holy Mass & blessings. |
 | **Clergy & Liturgy** | **Deacon / Lay Minister** | No (Standing) | 🕊️ | Liturgical ministers assisting with communion and blessings. |
 | **Clergy & Liturgy** | **Hermano / Hermana Major** | Yes (`year`) | 👑 | Spiritual heads/hosts for the festival year (e.g. *Hermano Major 2026*). |
+| **Liturgy & Music** | **Music Ministry / Choir Member** | Yes (`year`) | 🎶 | Active choir vocalists and musicians (e.g. *Coro Sto. Niño '24-'26*). |
+| **Liturgy & Word** | **Liturgical Lector / Commentator** | Yes (`year`) | 📖 | Proclaimers of the Word for Saturday & feast masses. |
+| **Liturgy & Altar** | **Acolyte / Altar Server** | Yes (`year`) | 🕯️ | Youth and senior altar servers assisting clergy. |
 | **Performance** | **Sinulog Dancer** | Yes (`year`) | 💃 | Dancers participating in the grand street dance (e.g. *Dancer '24, '25, '26*). |
 | **Performance** | **Dance Troupe Competitor** | Yes (`year`) | 🏆 | Members competing in the Sinulog Dance Competition (with troupe name). |
 | **Pageant** | **Sinulog Festival Queen / Miss Sinulog** | Yes (`year`) | 👸 | Pageant candidates, runners-up, and crowned titleholders (e.g. *Queen 2025*). |
@@ -207,8 +210,18 @@ The events and calendar engine is built to support the entire Catholic liturgica
 3. **Chapter Delegations & Pilgrimage Caravans:**
    - Supports group attendance for long-distance caravans (e.g., North Shore chapter bus delegation to Hamilton Mass or outdoor Stations of the Cross pilgrimage in Puhoi).
    - Event cards display group badges: *"18 Devotees from North Shore Chapter attending (Carpooling from Albany)"*.
-4. **Liturgical Badges:**
-   - Devotees can earn seasonal badges like `🎄 Simbang Gabi 2026 (9 Masses Done)` and `✝️ Via Crucis Pilgrim '26`.
+4. **Liturgical Ministry & Choir Rotation Matrix:**
+   - **Scope Boundary (Anti-ERP Principle):** The platform intentionally avoids bureaucratic parish management (such as shift swaps, sacristy inventories, or acolyte attendance logs). Instead, it acts as a **Community Visibility & Ministry Recognition** engine.
+   - Every Mass event displays its assigned roster:
+     - *Presiding Celebrant:* (e.g. `Rev. Fr. Mario Gomez`)
+     - *Music Ministry / Choir:* (e.g. `Coro de Santo Niño (North Shore)`)
+     - *Lector / Proclaimer:* (e.g. `Maria Santos-Cruz`)
+     - *Altar Servers:* (e.g. `Cathedral Youth Guild`)
+     - *Mass Sponsoring Chapter / Family:* (e.g. `Pukekohe Chapter & Reyes Family`)
+   - **9-Day Rotation Schedule View:** In multi-day novenas (Santo Niño 9-Day Novena, Christmas Simbang Gabi, or Lenten Friday Masses), devotees and choir members can open a 1-tap modal viewing which chapter choir and presider is assigned across all 9 days.
+   - Tagged choirs and lectors can share their upcoming service directly to the feed, encouraging friends and family to attend.
+5. **Liturgical Badges:**
+   - Devotees can earn seasonal badges like `🎄 Simbang Gabi 2026 (9 Masses Done)`, `✝️ Via Crucis Pilgrim '26`, and `🎶 Choir Member (Coro Sto. Niño '26)`.
 
 ---
 
@@ -331,6 +344,19 @@ CREATE TABLE event_rsvps (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(event_id, user_id)
 );
+```
+
+### 7. Liturgical Ministry Extensions on `events`
+```sql
+-- Extending events with Liturgical Roster & Choir Rotation metadata
+ALTER TABLE events ADD COLUMN IF NOT EXISTS presider_name TEXT;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS presider_id UUID REFERENCES profiles(id);
+ALTER TABLE events ADD COLUMN IF NOT EXISTS choir_name TEXT;              -- e.g. 'Coro de Santo Niño'
+ALTER TABLE events ADD COLUMN IF NOT EXISTS choir_group_id UUID REFERENCES dance_groups(id);
+ALTER TABLE events ADD COLUMN IF NOT EXISTS lectors TEXT[] DEFAULT '{}';   -- Proclaimers of the Word
+ALTER TABLE events ADD COLUMN IF NOT EXISTS acolytes_guild TEXT;          -- e.g. 'Cathedral Youth Guild'
+ALTER TABLE events ADD COLUMN IF NOT EXISTS sponsor_chapter TEXT;         -- e.g. 'Pukekohe Chapter'
+ALTER TABLE events ADD COLUMN IF NOT EXISTS mass_sequence_number INT;     -- e.g. Day 1 of 9 Novena / Simbang Gabi
 ```
 
 ---
