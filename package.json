@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "tsx --test tests/unit/*.test.ts",
     "deploy": "next build && touch out/.nojekyll",
     "generate-types": "npx supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/database.types.ts"
   },
@@ -34,6 +35,7 @@
     "eslint-config-next": "^16.1.4",
     "postcss": "^8.5.0",
     "tailwindcss": "^4.0.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.7.0"
   }
 }
