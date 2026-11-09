@@ -179,10 +179,36 @@ Community devotion and Sinulog festival engagement span years of volunteerism, p
 - Public intentions appear on the social feed.
 - Private house visits (Pilgrim Image home enthronement, house blessings, sick pastoral calls) remain securely routed to area Hermanos via the `requests` table with address and preferred timeslot details.
 
-### 7.4 Events & Sinulog Practice Schedules
-- Event cards with venue map preview, date/time badge, and RSVP status (`Going`, `Interested`, `Can't Go`).
-- Attendee avatar preview (e.g. *"Maria, Jun, and 28 others are attending"*).
-- One-tap "Add to Device Calendar" (`.ics` generation or Google Calendar link).
+### 7.4 Full Liturgical Calendar, Pilgrimages & Map Directions
+
+The events and calendar engine is built to support the entire Catholic liturgical cycle and Filipino community traditions across New Zealand:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     LITURGICAL SEASONS & PILGRIMAGE FLOW                    │
+├──────────────────────┬──────────────────────┬───────────────────────────────┤
+│ 1. ADVENT & CHRISTMAS│ 2. FIESTA SEÑOR STO. │ 3. LENT & HOLY WEEK           │
+│  • Simbang Gabi (9d) │  • 9-Day Novena      │  • Ash Wednesday Masses       │
+│  • Christmas Eve     │  • Sinulog Festival  │  • Stations of the Cross      │
+│  • Panunuluyan       │  • Street Dance      │  • Visita Iglesia (7 Churches)│
+│  • Misa de Gallo     │  • Fiesta Mass       │  • Easter Dawn (Salubong)     │
+└──────────────────────┴──────────────────────┴───────────────────────────────┘
+```
+
+#### Key Capabilities:
+1. **Turn-by-Turn Map Directions:**
+   - Every event card includes a 1-tap **"📍 Get Directions"** link triggering native Google Maps or Apple Maps:
+     `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue_name + ' ' + venue_address)}`
+   - Includes venue parking tips, meeting point notes (e.g. *"Assembly at Cathedral Courtyard for street procession"*), and public transit advice.
+2. **Seasonal Devotional Guides (Dynamic Stories Bar):**
+   - In December: Stories bar features the **Simbang Gabi 9-Day Mass tracker**.
+   - During Lent: Features the interactive **14 Stations of the Cross (Via Crucis)** guide with reflections and audio.
+   - In January: Features the **Santo Niño 9-Day Novena**.
+3. **Chapter Delegations & Pilgrimage Caravans:**
+   - Supports group attendance for long-distance caravans (e.g., North Shore chapter bus delegation to Hamilton Mass or outdoor Stations of the Cross pilgrimage in Puhoi).
+   - Event cards display group badges: *"18 Devotees from North Shore Chapter attending (Carpooling from Albany)"*.
+4. **Liturgical Badges:**
+   - Devotees can earn seasonal badges like `🎄 Simbang Gabi 2026 (9 Masses Done)` and `✝️ Via Crucis Pilgrim '26`.
 
 ---
 
