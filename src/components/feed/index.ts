@@ -18,3 +18,7 @@ export * from './EventAnnouncementCard';
 
 export { default as CommunityFeed } from './CommunityFeed';
 export * from './CommunityFeed';
+
+export { default as PostComposerModal } from './PostComposerModal';
+export * from './PostComposerModal';
+
