@@ -43,13 +43,11 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-lg">
         <div className="text-center mb-8">
           <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-500/20 to-red-800/30 border border-amber-300/60 flex items-center justify-center p-2 shadow-sm ring-2 ring-amber-100 overflow-hidden">
-            <Image
-              src="/santonino-statue.png"
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/devotees/santonino-statue.png"
               alt="Señor Santo Niño"
-              width={64}
-              height={64}
-              className="object-contain h-full w-auto drop-shadow"
-              priority
+              className="w-14 h-14 object-contain drop-shadow"
             />
           </div>
           <Title level={2} className="mb-2">

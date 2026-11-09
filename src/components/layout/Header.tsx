@@ -115,13 +115,11 @@ export function Header({
         <div className="flex items-center space-x-3">
           <Link href="/" className="flex items-center space-x-2.5 group no-underline">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-red-800/30 border border-amber-300/50 flex items-center justify-center shadow-sm ring-1 ring-amber-200 overflow-hidden p-0.5">
-              <Image
-                src="/santonino-statue.png"
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/devotees/santonino-statue.png"
                 alt="Señor Santo Niño"
-                width={36}
-                height={36}
-                className="object-contain h-full w-auto drop-shadow"
-                priority
+                className="w-8 h-8 object-contain drop-shadow"
               />
             </div>
             <div>
