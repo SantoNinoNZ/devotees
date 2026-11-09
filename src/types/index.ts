@@ -47,7 +47,7 @@ export interface EventLiturgicalRoster {
   presider_id: string | null;
   choir_name: string | null;
   choir_group_id: string | null;
-  lectors: string[];
+  lectors: string[] | null;
   acolytes_guild: string | null;
   sponsor_chapter: string | null;
   mass_sequence_number: number | null;
