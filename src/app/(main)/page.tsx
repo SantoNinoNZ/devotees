@@ -482,6 +482,18 @@ export default function CommunityFeedPage() {
     }
   };
 
+  // Delete Community Post Handler
+  const handleDeletePost = async (postId: string) => {
+    try {
+      await communityFeedApi.deletePost(postId);
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      message.success('Post removed from community feed.');
+    } catch (err) {
+      console.error('Failed to delete post:', err);
+      message.error('Failed to delete post. Please try again.');
+    }
+  };
+
   // Urgent Intentions Interactive Toggles
   const handleToggleUrgentAmen1 = () => {
     if (hasPrayedUrgent1) {
@@ -627,6 +639,7 @@ export default function CommunityFeedPage() {
             onOpenChoirSchedule={() => setIsChoirModalOpen(true)}
             onBadgeClick={handleBadgeClick}
             onShareClick={handleShareClick}
+            onDeletePost={handleDeletePost}
           />
         </section>
 

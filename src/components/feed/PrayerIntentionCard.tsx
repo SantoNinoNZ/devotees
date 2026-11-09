@@ -11,6 +11,7 @@ export interface PrayerIntentionCardProps {
   onCommentClick?: (postId: string) => void;
   onShareClick?: (post: CommunityPostWithAuthor) => void;
   onBadgeClick?: (badgeName: string) => void;
+  onDeletePost?: (postId: string) => void;
   className?: string;
 }
 
@@ -56,10 +57,12 @@ export function getIntentionCategoryBadge(
 
 export const PrayerIntentionCard: React.FC<PrayerIntentionCardProps> = ({
   post,
+  currentUserId,
   onAmenToggle,
   onCommentClick,
   onShareClick,
   onBadgeClick,
+  onDeletePost,
   className = '',
 }) => {
   const initialAmenCount =
@@ -144,6 +147,8 @@ export const PrayerIntentionCard: React.FC<PrayerIntentionCardProps> = ({
             {categoryBadge.label}
           </span>
         }
+        canDelete={Boolean(currentUserId && (post.author_id === currentUserId || post.author?.id === currentUserId))}
+        onDelete={() => onDeletePost?.(post.id)}
         onBadgeClick={onBadgeClick}
       />
 

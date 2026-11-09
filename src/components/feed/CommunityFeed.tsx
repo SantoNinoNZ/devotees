@@ -40,17 +40,21 @@ export function getPostDisplayType(post: CommunityPostWithAuthor): FeedCardDispl
  */
 export const GeneralPostCard: React.FC<{
   post: CommunityPostWithAuthor;
+  currentUserId?: string | null;
   onReactionToggle?: (postId: string, reactionType: PostReactionType) => Promise<void> | void;
   onCommentClick?: (postId: string) => void;
   onShareClick?: (post: CommunityPostWithAuthor) => void;
   onBadgeClick?: (badgeName: string) => void;
+  onDeletePost?: (postId: string) => void;
   className?: string;
 }> = ({
   post,
+  currentUserId,
   onReactionToggle,
   onCommentClick,
   onShareClick,
   onBadgeClick,
+  onDeletePost,
   className = '',
 }) => {
   const initialLikeCount =
@@ -99,6 +103,8 @@ export const GeneralPostCard: React.FC<{
         author={post.author}
         createdAt={post.created_at}
         onBadgeClick={onBadgeClick}
+        canDelete={Boolean(currentUserId && (post.author_id === currentUserId || post.author?.id === currentUserId))}
+        onDelete={() => onDeletePost?.(post.id)}
       />
 
       {post.content && (
@@ -172,6 +178,7 @@ export interface CommunityFeedProps {
   onCommentClick?: (postId: string) => void;
   onShareClick?: (post: CommunityPostWithAuthor) => void;
   onBadgeClick?: (badgeName: string) => void;
+  onDeletePost?: (postId: string) => void;
   emptyMessage?: string;
   className?: string;
 }
@@ -187,6 +194,7 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
   onCommentClick,
   onShareClick,
   onBadgeClick,
+  onDeletePost,
   emptyMessage,
   className = '',
 }) => {
@@ -256,6 +264,7 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
                 onCommentClick={onCommentClick}
                 onShareClick={onShareClick}
                 onBadgeClick={onBadgeClick}
+                onDeletePost={onDeletePost}
               />
             );
 
@@ -269,6 +278,7 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
                 onCommentClick={onCommentClick}
                 onShareClick={onShareClick}
                 onBadgeClick={onBadgeClick}
+                onDeletePost={onDeletePost}
               />
             );
 
@@ -293,10 +303,12 @@ export const CommunityFeed: React.FC<CommunityFeedProps> = ({
               <GeneralPostCard
                 key={post.id}
                 post={post}
+                currentUserId={currentUserId}
                 onReactionToggle={onReactionToggle}
                 onCommentClick={onCommentClick}
                 onShareClick={onShareClick}
                 onBadgeClick={onBadgeClick}
+                onDeletePost={onDeletePost}
               />
             );
         }

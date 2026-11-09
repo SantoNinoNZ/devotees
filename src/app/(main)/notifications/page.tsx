@@ -19,7 +19,7 @@ export default function NotificationsPage() {
         </Title>
         <Space>
           <Button icon={<CheckOutlined />}>Mark All Read</Button>
-          <Link href="/profile/settings">
+          <Link href="/profile/edit">
             <Button icon={<SettingOutlined />}>Settings</Button>
           </Link>
         </Space>

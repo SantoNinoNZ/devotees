@@ -12,15 +12,18 @@ export interface YouTubeVideoCardProps {
   onCommentClick?: (postId: string) => void;
   onShareClick?: (post: CommunityPostWithAuthor) => void;
   onBadgeClick?: (badgeName: string) => void;
+  onDeletePost?: (postId: string) => void;
   className?: string;
 }
 
 export const YouTubeVideoCard: React.FC<YouTubeVideoCardProps> = ({
   post,
+  currentUserId,
   onReactionToggle,
   onCommentClick,
   onShareClick,
   onBadgeClick,
+  onDeletePost,
   className = '',
 }) => {
   // Resolve YouTube Video ID from dedicated field or media_urls
@@ -105,11 +108,8 @@ export const YouTubeVideoCard: React.FC<YouTubeVideoCardProps> = ({
       <FeedCardHeader
         author={post.author}
         createdAt={post.created_at}
-        rightSlot={
-          <span className="text-stone-400 hover:text-stone-600 cursor-pointer p-1 text-sm">
-            ⋯
-          </span>
-        }
+        canDelete={Boolean(currentUserId && (post.author_id === currentUserId || post.author?.id === currentUserId))}
+        onDelete={() => onDeletePost?.(post.id)}
         onBadgeClick={onBadgeClick}
       />
 

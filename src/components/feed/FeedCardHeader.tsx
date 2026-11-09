@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import { Dropdown } from 'antd';
+import { MoreOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ProfileWithRoles, UserBadgeWithDefinition } from '@/types';
 import { BadgePill } from './BadgePill';
 
@@ -46,6 +48,8 @@ export interface FeedCardHeaderProps {
   subtitle?: string;
   rightSlot?: React.ReactNode;
   onBadgeClick?: (badgeName: string) => void;
+  canDelete?: boolean;
+  onDelete?: () => void;
 }
 
 export const FeedCardHeader: React.FC<FeedCardHeaderProps> = ({
@@ -54,6 +58,8 @@ export const FeedCardHeader: React.FC<FeedCardHeaderProps> = ({
   subtitle,
   rightSlot,
   onBadgeClick,
+  canDelete = false,
+  onDelete,
 }) => {
   const displayName = author?.display_name || 'Devotee';
   const initials = getAuthorInitials(displayName);
@@ -109,7 +115,68 @@ export const FeedCardHeader: React.FC<FeedCardHeaderProps> = ({
         </div>
       </div>
 
-      {rightSlot && <div className="flex-shrink-0">{rightSlot}</div>}
+      {rightSlot ? (
+        <div className="flex-shrink-0 flex items-center space-x-1.5">
+          {rightSlot}
+          {canDelete && onDelete && (
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'delete',
+                    danger: true,
+                    icon: <DeleteOutlined />,
+                    label: 'Delete Post',
+                    onClick: () => {
+                      if (window.confirm('Are you sure you want to delete this post?')) {
+                        onDelete();
+                      }
+                    },
+                  },
+                ],
+              }}
+              trigger={['click']}
+            >
+              <button
+                type="button"
+                className="p-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition cursor-pointer"
+                title="Post Options"
+              >
+                <MoreOutlined className="text-base" />
+              </button>
+            </Dropdown>
+          )}
+        </div>
+      ) : canDelete && onDelete ? (
+        <div className="flex-shrink-0">
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'delete',
+                  danger: true,
+                  icon: <DeleteOutlined />,
+                  label: 'Delete Post',
+                  onClick: () => {
+                    if (window.confirm('Are you sure you want to delete this post?')) {
+                      onDelete();
+                    }
+                  },
+                },
+              ],
+            }}
+            trigger={['click']}
+          >
+            <button
+              type="button"
+              className="p-1 rounded-full text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition cursor-pointer"
+              title="Post Options"
+            >
+              <MoreOutlined className="text-base" />
+            </button>
+          </Dropdown>
+        </div>
+      ) : null}
     </div>
   );
 };

@@ -17,7 +17,7 @@ import {
 import { UserOutlined, ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 import { useAuth } from '@/hooks/useAuth';
 import { profileApi, areasApi } from '@/lib/supabase-api';
-import type { Area } from '@/types';
+import type { Area, ProfileWithRoles } from '@/types';
 
 const { Title, Text } = Typography;
 
@@ -29,11 +29,25 @@ interface ProfileFormValues {
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const { profile, refreshProfile } = useAuth();
+  const { profile, user, isLoading, refreshProfile } = useAuth();
   const [form] = Form.useForm<ProfileFormValues>();
   const [areas, setAreas] = useState<Area[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingAreas, setLoadingAreas] = useState(true);
+
+  const effectiveProfile: ProfileWithRoles | null = profile || (user ? {
+    id: user.id,
+    email: user.email || '',
+    display_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Devotee',
+    avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+    phone: null,
+    area_id: null,
+    is_active: true,
+    created_at: user.created_at || new Date().toISOString(),
+    updated_at: user.updated_at || new Date().toISOString(),
+    area: null,
+    roles: [],
+  } : null);
 
   useEffect(() => {
     const loadAreas = async () => {
@@ -50,14 +64,14 @@ export default function EditProfilePage() {
   }, []);
 
   useEffect(() => {
-    if (profile) {
+    if (effectiveProfile) {
       form.setFieldsValue({
-        display_name: profile.display_name,
-        phone: profile.phone || '',
-        area_id: profile.area_id || undefined,
+        display_name: effectiveProfile.display_name,
+        phone: effectiveProfile.phone || '',
+        area_id: effectiveProfile.area_id || undefined,
       });
     }
-  }, [profile, form]);
+  }, [effectiveProfile, form]);
 
   const handleSubmit = async (values: ProfileFormValues) => {
     setLoading(true);
@@ -83,10 +97,21 @@ export default function EditProfilePage() {
     }
   };
 
-  if (!profile) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (!effectiveProfile) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+        <Text type="secondary">Please sign in to edit your profile.</Text>
+        <Button type="primary" onClick={() => router.push('/login')}>
+          Sign In
+        </Button>
       </div>
     );
   }
@@ -107,8 +132,8 @@ export default function EditProfilePage() {
         <div className="flex flex-col items-center mb-6">
           <Avatar
             size={96}
-            src={profile.avatar_url}
-            icon={!profile.avatar_url && <UserOutlined />}
+            src={effectiveProfile.avatar_url || undefined}
+            icon={!effectiveProfile.avatar_url && <UserOutlined />}
             className="bg-[#B91C1C]"
           />
           <Text type="secondary" className="mt-2">
@@ -133,7 +158,7 @@ export default function EditProfilePage() {
           <Form.Item
             label="Email"
           >
-            <Input value={profile.email} disabled size="large" />
+            <Input value={effectiveProfile.email} disabled size="large" />
             <Text type="secondary" className="text-xs mt-1 block">
               Email cannot be changed
             </Text>

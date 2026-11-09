@@ -43,7 +43,7 @@ export default function MorePage() {
       icon: <SettingOutlined />,
       title: 'Settings',
       description: 'App settings and preferences',
-      href: '/profile/settings',
+      href: '/profile/edit',
     },
     ...(canAccessAdmin
       ? [

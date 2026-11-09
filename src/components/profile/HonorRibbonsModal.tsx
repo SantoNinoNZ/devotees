@@ -358,12 +358,12 @@ export const HonorRibbonsModal: React.FC<HonorRibbonsModalProps> = ({
         <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-stone-200 max-h-[90vh] overflow-y-auto">
           {/* Profile Header with Cover & Avatar */}
           <div className="relative pb-3">
-            <div className="h-24 rounded-2xl bg-gradient-to-r from-brand-800 via-brand-700 to-gold-600 flex items-end p-3 text-white">
+            <div className="h-24 rounded-2xl bg-gradient-to-r from-brand-800 via-brand-700 to-gold-600 flex items-end p-3 text-white shadow-sm">
               <span className="text-[11px] font-bold uppercase tracking-widest font-cinzel text-amber-200">
                 Devotee Profile
               </span>
             </div>
-            <div className="absolute -bottom-4 left-4 w-16 h-16 rounded-full bg-brand-800 text-white font-bold flex items-center justify-center text-xl ring-4 ring-white shadow-md overflow-hidden">
+            <div className="absolute -bottom-4 left-4 w-16 h-16 rounded-full bg-[#991b1b] text-white font-bold flex items-center justify-center text-xl ring-4 ring-white shadow-md overflow-hidden">
               {userProfile?.avatar_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img

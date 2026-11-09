@@ -877,7 +877,7 @@ export const profileApi = {
       .select(`
         *,
         area:areas(id, name),
-        roles:user_roles(role, area_id, dance_group_id, is_active)
+        roles:user_roles!user_roles_user_id_fkey(role, area_id, dance_group_id, is_active)
       `)
       .eq('id', userId)
       .single();
