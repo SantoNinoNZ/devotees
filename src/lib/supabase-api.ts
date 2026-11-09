@@ -12,6 +12,21 @@ import type {
   Profile,
   UserRole,
   ProfileWithRoles,
+  BadgeDefinition,
+  CommunityPost,
+  CommunityPostInsert,
+  CommunityPostComment,
+  CommunityPostReaction,
+  UserBadge,
+  UserBadgeWithDefinition,
+  NovenaProgress,
+  NovenaProgressInsert,
+  CommunityPostType,
+  IntentionCategory,
+  PostReactionType,
+  CommunityPostWithAuthor,
+  CommunityPostCommentWithAuthor,
+  EventWithRoster,
 } from '@/types';
 
 // Extended event type with RSVP counts and relations
@@ -255,6 +270,55 @@ export const eventsApi = {
 
     return true;
   },
+
+  // Get upcoming events with liturgical roster
+  async getUpcomingEvents(limit = 10): Promise<EventWithRoster[]> {
+    try {
+      if (!supabase) return [];
+
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('published', true)
+        .gte('event_start_date', today)
+        .order('event_start_date', { ascending: true })
+        .limit(limit);
+
+      if (error) {
+        console.error('Error fetching upcoming events:', error);
+        return [];
+      }
+
+      return (data || []) as EventWithRoster[];
+    } catch (err) {
+      console.error('Error in getUpcomingEvents:', err);
+      return [];
+    }
+  },
+
+  // Get a single event by ID with liturgical roster
+  async getEventById(eventId: string): Promise<EventWithRoster | null> {
+    try {
+      if (!supabase) return null;
+
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', eventId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching event by ID:', error);
+        return null;
+      }
+
+      return data as EventWithRoster;
+    } catch (err) {
+      console.error('Error in getEventById:', err);
+      return null;
+    }
+  },
 };
 
 // Novenas API
@@ -414,6 +478,65 @@ export const novenasApi = {
         last_prayed_at: un.last_prayed_at,
       },
     }));
+  },
+
+  // Get user's annual novena day progress
+  async getUserNovenaProgress(
+    userId: string,
+    cycleYear?: number
+  ): Promise<NovenaProgress[]> {
+    try {
+      if (!supabase) return [];
+
+      const year = cycleYear ?? new Date().getFullYear();
+      const { data, error } = await supabase
+        .from('novena_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('cycle_year', year)
+        .order('day_number', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching novena progress:', error);
+        return [];
+      }
+
+      return (data || []) as NovenaProgress[];
+    } catch (err) {
+      console.error('Error in getUserNovenaProgress:', err);
+      return [];
+    }
+  },
+
+  // Mark a specific day of the annual novena as completed (upsert)
+  async markDayCompleted(
+    userId: string,
+    dayNumber: number,
+    cycleYear?: number
+  ): Promise<NovenaProgress> {
+    if (!supabase) throw new Error('Supabase client not initialized');
+
+    const year = cycleYear ?? new Date().getFullYear();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.from('novena_progress') as any)
+      .upsert(
+        {
+          user_id: userId,
+          day_number: dayNumber,
+          cycle_year: year,
+          completed_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id,day_number,cycle_year' }
+      )
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error marking day completed:', error);
+      throw error;
+    }
+
+    return data as NovenaProgress;
   },
 };
 
@@ -796,3 +919,501 @@ export const profileApi = {
     return true;
   },
 };
+
+// Helper to format a community post with author, reaction counts, user reaction, and comment counts
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function formatCommunityPost(post: any, currentUserId?: string | null): CommunityPostWithAuthor {
+  const reactions: CommunityPostReaction[] = Array.isArray(post.reactions) ? post.reactions : [];
+  const amenCount = reactions.filter((r) => r.reaction_type === 'amen').length;
+  const heartCount = reactions.filter((r) => r.reaction_type === 'heart').length;
+  const likeCount = reactions.filter((r) => r.reaction_type === 'like').length;
+  const userReaction = currentUserId
+    ? reactions.find((r) => r.user_id === currentUserId)?.reaction_type || null
+    : null;
+  const commentsCount = Array.isArray(post.comments)
+    ? post.comments.length
+    : typeof post.comments_count === 'number'
+    ? post.comments_count
+    : 0;
+
+  return {
+    ...post,
+    reaction_counts: {
+      amen: amenCount,
+      heart: heartCount,
+      like: likeCount,
+      total: reactions.length,
+    },
+    user_reaction: userReaction,
+    comments_count: commentsCount,
+  } as CommunityPostWithAuthor;
+}
+
+// Community Feed API
+export const communityFeedApi = {
+  // Get community posts with author, reactions, and event details
+  async getFeedPosts(options?: {
+    limit?: number;
+    offset?: number;
+    type?: CommunityPostType;
+    category?: IntentionCategory;
+    pinnedOnly?: boolean;
+  }): Promise<CommunityPostWithAuthor[]> {
+    try {
+      if (!supabase) return [];
+
+      let currentUserId: string | null = null;
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        currentUserId = authData?.user?.id || null;
+      } catch {
+        // Auth not available
+      }
+
+      let query = supabase
+        .from('community_posts')
+        .select(`
+          *,
+          author:profiles(
+            id,
+            display_name,
+            avatar_url,
+            user_badges:user_badges(
+              id,
+              user_id,
+              badge_id,
+              year,
+              title_override,
+              organization_or_troupe,
+              is_featured,
+              awarded_at,
+              definition:badge_definitions(*)
+            )
+          ),
+          event:events(*),
+          reactions:community_post_reactions(*),
+          comments:community_post_comments(id)
+        `)
+        .eq('is_hidden', false);
+
+      if (options?.pinnedOnly) {
+        query = query.eq('is_pinned', true);
+      }
+
+      if (options?.type) {
+        query = query.eq('post_type', options.type);
+      }
+
+      if (options?.category) {
+        query = query.eq('intention_category', options.category);
+      }
+
+      query = query
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (options?.offset !== undefined && options?.limit !== undefined) {
+        query = query.range(options.offset, options.offset + options.limit - 1);
+      } else if (options?.limit) {
+        query = query.limit(options.limit);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        console.error('Error fetching feed posts:', error);
+        return [];
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data || []).map((p: any) => formatCommunityPost(p, currentUserId));
+    } catch (err) {
+      console.error('Error in getFeedPosts:', err);
+      return [];
+    }
+  },
+
+  // Get a single post by ID with all relations
+  async getPostById(postId: string): Promise<CommunityPostWithAuthor | null> {
+    try {
+      if (!supabase) return null;
+
+      let currentUserId: string | null = null;
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        currentUserId = authData?.user?.id || null;
+      } catch {
+        // Auth not available
+      }
+
+      const { data, error } = await supabase
+        .from('community_posts')
+        .select(`
+          *,
+          author:profiles(
+            id,
+            display_name,
+            avatar_url,
+            user_badges:user_badges(
+              id,
+              user_id,
+              badge_id,
+              year,
+              title_override,
+              organization_or_troupe,
+              is_featured,
+              awarded_at,
+              definition:badge_definitions(*)
+            )
+          ),
+          event:events(*),
+          reactions:community_post_reactions(*),
+          comments:community_post_comments(id)
+        `)
+        .eq('id', postId)
+        .single();
+
+      if (error || !data) {
+        if (error) console.error('Error fetching post by ID:', error);
+        return null;
+      }
+
+      return formatCommunityPost(data, currentUserId);
+    } catch (err) {
+      console.error('Error in getPostById:', err);
+      return null;
+    }
+  },
+
+  // Create a new community post
+  async createPost(post: CommunityPostInsert): Promise<CommunityPost> {
+    if (!supabase) throw new Error('Supabase client not initialized');
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.from('community_posts') as any)
+      .insert({
+        ...post,
+        created_at: post.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error creating post:', error);
+      throw error;
+    }
+
+    return data as CommunityPost;
+  },
+
+  // Toggle a reaction on a post (amen, heart, like)
+  async toggleReaction(
+    postId: string,
+    userId: string,
+    reactionType: PostReactionType
+  ): Promise<{ added: boolean; count: number }> {
+    try {
+      if (!supabase) return { added: false, count: 0 };
+
+      // Check if user already reacted
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: existing, error: checkError } = await (supabase.from('community_post_reactions') as any)
+        .select('id, reaction_type')
+        .eq('post_id', postId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking post reaction:', checkError);
+        return { added: false, count: 0 };
+      }
+
+      let added = false;
+      if (existing) {
+        if (existing.reaction_type === reactionType) {
+          // Same reaction: toggle off
+          const { error: delError } = await supabase
+            .from('community_post_reactions')
+            .delete()
+            .eq('id', existing.id);
+          if (delError) {
+            console.error('Error removing reaction:', delError);
+            return { added: false, count: 0 };
+          }
+          added = false;
+        } else {
+          // Different reaction: update reaction type
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { error: updError } = await (supabase.from('community_post_reactions') as any)
+            .update({ reaction_type: reactionType })
+            .eq('id', existing.id);
+          if (updError) {
+            console.error('Error updating reaction:', updError);
+            return { added: false, count: 0 };
+          }
+          added = true;
+        }
+      } else {
+        // No reaction: insert new reaction
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: insError } = await (supabase.from('community_post_reactions') as any)
+          .insert({
+            post_id: postId,
+            user_id: userId,
+            reaction_type: reactionType,
+          });
+        if (insError) {
+          console.error('Error inserting reaction:', insError);
+          return { added: false, count: 0 };
+        }
+        added = true;
+      }
+
+      // Fetch updated count for this reaction_type
+      const { count, error: countError } = await supabase
+        .from('community_post_reactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('post_id', postId)
+        .eq('reaction_type', reactionType);
+
+      if (countError) {
+        console.error('Error fetching reaction count:', countError);
+      }
+
+      return { added, count: count ?? 0 };
+    } catch (err) {
+      console.error('Error in toggleReaction:', err);
+      return { added: false, count: 0 };
+    }
+  },
+
+  // Toggle Amen reaction on a post
+  async toggleAmen(postId: string, userId: string): Promise<{ added: boolean; count: number }> {
+    return this.toggleReaction(postId, userId, 'amen');
+  },
+
+  // Get comments for a post
+  async getPostComments(postId: string): Promise<CommunityPostCommentWithAuthor[]> {
+    try {
+      if (!supabase) return [];
+
+      const { data, error } = await supabase
+        .from('community_post_comments')
+        .select(`
+          *,
+          author:profiles(
+            id,
+            display_name,
+            avatar_url,
+            user_badges:user_badges(
+              id,
+              user_id,
+              badge_id,
+              year,
+              title_override,
+              organization_or_troupe,
+              is_featured,
+              definition:badge_definitions(*)
+            )
+          )
+        `)
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching post comments:', error);
+        return [];
+      }
+
+      return (data || []) as CommunityPostCommentWithAuthor[];
+    } catch (err) {
+      console.error('Error in getPostComments:', err);
+      return [];
+    }
+  },
+
+  // Add comment to a post
+  async addComment(
+    postId: string,
+    authorId: string,
+    content: string
+  ): Promise<CommunityPostCommentWithAuthor> {
+    if (!supabase) throw new Error('Supabase client not initialized');
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase.from('community_post_comments') as any)
+      .insert({
+        post_id: postId,
+        author_id: authorId,
+        content,
+      })
+      .select(`
+        *,
+        author:profiles(
+          id,
+          display_name,
+          avatar_url,
+          user_badges:user_badges(
+            id,
+            user_id,
+            badge_id,
+            year,
+            title_override,
+            organization_or_troupe,
+            is_featured,
+            definition:badge_definitions(*)
+          )
+        )
+      `)
+      .single();
+
+    if (error) {
+      console.error('Error adding comment:', error);
+      throw error;
+    }
+
+    return data as CommunityPostCommentWithAuthor;
+  },
+
+  // Pin / unpin a post
+  async pinPost(postId: string, isPinned: boolean): Promise<void> {
+    if (!supabase) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('community_posts') as any)
+      .update({
+        is_pinned: isPinned,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', postId);
+
+    if (error) {
+      console.error('Error pinning post:', error);
+      throw error;
+    }
+  },
+
+  // Hide / unhide a post (moderation)
+  async hidePost(postId: string, isHidden: boolean): Promise<void> {
+    if (!supabase) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('community_posts') as any)
+      .update({
+        is_hidden: isHidden,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', postId);
+
+    if (error) {
+      console.error('Error hiding post:', error);
+      throw error;
+    }
+  },
+
+  // Delete a post
+  async deletePost(postId: string): Promise<void> {
+    if (!supabase) return;
+
+    const { error } = await supabase
+      .from('community_posts')
+      .delete()
+      .eq('id', postId);
+
+    if (error) {
+      console.error('Error deleting post:', error);
+      throw error;
+    }
+  },
+};
+
+// Badges API
+export const badgesApi = {
+  // Get all badge definitions
+  async getAllBadgeDefinitions(): Promise<BadgeDefinition[]> {
+    try {
+      if (!supabase) return [];
+
+      const { data, error } = await supabase
+        .from('badge_definitions')
+        .select('*')
+        .order('category', { ascending: true })
+        .order('name', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching badge definitions:', error);
+        return [];
+      }
+
+      return (data || []) as BadgeDefinition[];
+    } catch (err) {
+      console.error('Error in getAllBadgeDefinitions:', err);
+      return [];
+    }
+  },
+
+  // Get user badges joined with badge definitions
+  async getUserBadges(userId: string): Promise<UserBadgeWithDefinition[]> {
+    try {
+      if (!supabase) return [];
+
+      const { data, error } = await supabase
+        .from('user_badges')
+        .select(`
+          *,
+          definition:badge_definitions(*)
+        `)
+        .eq('user_id', userId)
+        .order('year', { ascending: false, nullsFirst: false })
+        .order('awarded_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching user badges:', error);
+        return [];
+      }
+
+      return (data || []) as UserBadgeWithDefinition[];
+    } catch (err) {
+      console.error('Error in getUserBadges:', err);
+      return [];
+    }
+  },
+
+  // Get user featured badges joined with badge definitions
+  async getUserFeaturedBadges(userId: string): Promise<UserBadgeWithDefinition[]> {
+    try {
+      if (!supabase) return [];
+
+      const { data, error } = await supabase
+        .from('user_badges')
+        .select(`
+          *,
+          definition:badge_definitions(*)
+        `)
+        .eq('user_id', userId)
+        .eq('is_featured', true)
+        .order('year', { ascending: false, nullsFirst: false })
+        .order('awarded_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching featured badges:', error);
+        return [];
+      }
+
+      return (data || []) as UserBadgeWithDefinition[];
+    } catch (err) {
+      console.error('Error in getUserFeaturedBadges:', err);
+      return [];
+    }
+  },
+};
+
+// Novena Progress API
+export const novenaProgressApi = {
+  getUserNovenaProgress: (userId: string, cycleYear?: number) =>
+    novenasApi.getUserNovenaProgress(userId, cycleYear),
+  markDayCompleted: (userId: string, dayNumber: number, cycleYear?: number) =>
+    novenasApi.markDayCompleted(userId, dayNumber, cycleYear),
+};
+
+export const novenaApi = novenasApi;
