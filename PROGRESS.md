@@ -22,8 +22,9 @@ A Progressive Web App (PWA) for the Santo Niño devotee community in New Zealand
 - [x] Google OAuth setup via Supabase
 - [x] `useAuth` hook (`src/hooks/useAuth.ts`)
 - [x] Login page (`src/app/login/page.tsx`)
-- [x] Auth callback handler (`src/app/auth/callback/page.tsx`)
+- [x] Auth callback handler (`src/app/auth/callback/page.tsx`) - manually handles OAuth tokens
 - [x] Permissions system (`src/lib/permissions.ts`)
+- [x] Fixed navigator.locks AbortError with no-op lock function in Supabase client
 
 ### 3. Layout Components ✅
 - [x] MainLayout with header/nav
@@ -72,7 +73,7 @@ The existing events table (used by admin/web) has been extended for devotees:
 - [x] Events list page with filtering by category
 - [x] Event detail page
 - [x] RSVP functionality (going/maybe/not going)
-- [ ] Calendar view
+- [x] Calendar view with Ant Design Calendar
 - [x] Event visibility enforcement (via Supabase RLS)
 
 #### Prayer Requests Module ✅
@@ -89,16 +90,16 @@ The existing events table (used by admin/web) has been extended for devotees:
 - [x] Mark days complete
 - [x] Progress indicator
 
-#### Announcements Module
-- [ ] Announcements list with visibility filtering
-- [ ] Announcement detail page
-- [ ] Casting call applications
+#### Announcements Module ✅
+- [x] Announcements list with visibility filtering
+- [x] Announcement detail page
+- [x] Casting call applications
 
-#### Profile Module
-- [ ] View/edit profile
-- [ ] Area selection
-- [ ] Role display
-- [ ] Notification preferences
+#### Profile Module ✅
+- [x] View/edit profile
+- [x] Area selection
+- [x] Role display
+- [ ] Notification preferences (Phase 2)
 
 ### Phase 2: Advanced Features
 
@@ -259,6 +260,7 @@ santoninonz-devotees/
    - List with category filters
    - Detail page with RSVP
    - Respect visibility rules
+   - Calendar view
 
 3. ~~**Build Novena module**~~ ✅ DONE
    - List available novenas
@@ -269,23 +271,26 @@ santoninonz-devotees/
    - Submit form
    - My requests list
 
-5. **Build Profile module** (NEXT)
+5. ~~**Build Profile module**~~ ✅ DONE
    - View/edit profile
    - Area selection
-   - Notification preferences
 
-6. **Build Announcements module**
+6. ~~**Build Announcements module**~~ ✅ DONE
    - Announcements list
    - Detail page
    - Casting call applications
 
-7. **Add Calendar view to Events**
-   - Integrate a calendar component
-   - Show events on calendar
+7. ~~**Add Calendar view to Events**~~ ✅ DONE
+   - Integrated Ant Design Calendar
+   - Shows events on calendar
 
-8. **Add Hermano features**
+8. **Add Hermano features** (NEXT)
    - Area requests management
    - Request assignment
+
+9. **Push Notifications** (Phase 2)
+   - Service worker setup
+   - Notification preferences
 
 ---
 

@@ -1,6 +1,6 @@
 # Santo Niño NZ Devotees — Community Social Platform Design Specification
 
-**Date:** 2026-11-07  
+**Date:** 2026-11-07 (Updated: 2026-11-09)  
 **Status:** Approved by User  
 **Target Audience:** Santo Niño devotee community in New Zealand, Hermanos/Hermanas, Area Coordinators, Dance Troupes, and Administrators.
 
@@ -12,7 +12,15 @@ The previous concept for the Devotees application was heavily focused on siloed 
 
 This design pivots the application into a **Facebook-style, community-driven social hub** tailored for the Santo Niño NZ community. It blends the warmth and familiar UX of social media (feed, stories, post composer, photos, comments, and reactions) with sacred devotional practices (daily 9-day Novena prayers, community intention requests, event calendars/RSVPs, and Pilgrim Image house blessings).
 
-Additionally, the architecture is specifically optimized for **Supabase Free Tier limits** by leveraging responsive YouTube video embedding (zero video storage/bandwidth cost) and browser-side WebP image compression.
+### 1.1 Architectural Strategy: Pivot vs. Rewrite
+- **Retain Proven Foundation:** Rather than starting from scratch, the project preserves existing tested plumbing:
+  - Next.js 16 (App Router) + TypeScript (strict mode) + Tailwind CSS 4.
+  - Supabase client with Google OAuth token handling in `/auth/callback`, `useAuth` hook, and RBAC permissions (`permissions.ts`).
+  - Pre-generated database types and contracts (`database.types.ts`).
+  - GitHub Pages static export CI/CD pipeline (`.github/workflows/deploy.yml`).
+  - Reusable logic for events calendar/RSVP and novena prayer content.
+- **Deprecate Standalone `/announcements`:** Dedicated announcements navigation is removed. Official announcements, casting calls, and notices are unified directly into the community feed as **Pinned / Official Posts** with verified badges (`Official Announcement`, `Casting Call`), eliminating redundant navigation while preserving high visibility.
+- **Pivot Presentation Layer:** The landing/home route (`/`) becomes the Community Social Feed, matching the layout demonstrated in `public/prototype.html`.
 
 ---
 
@@ -21,22 +29,22 @@ Additionally, the architecture is specifically optimized for **Supabase Free Tie
 | Role | Badge | Permissions |
 |------|-------|-------------|
 | **Devotee** (General Member) | Member Tag / Area Chapter | Post reflections, share photos, embed YouTube videos, submit prayer intentions, mark Novena completion, RSVP to events, comment and react (*🙏 Amen*, *❤️ Care*, *👍 Like*), report content. |
-| **Hermano / Hermana** | `Verified Hermana/Hermano` (Gold badge) | All Devotee permissions + create official event announcements, collect intentions for Saturday Mass list, review & coordinate House Blessing visits, hide/moderate reported posts. |
-| **Coordinator / Leader** | `Area Coordinator` / `Dance Leader` | All Devotee permissions + create area chapter events/rehearsals, manage dance group member lists, pin announcements. |
-| **Super Admin** | `Administrator` | Full system administration, role assignment, content moderation. |
+| **Hermano / Hermana** | `Verified Hermana/Hermano` (Gold badge) | All Devotee permissions + create official announcements & events, collect intentions for Saturday Mass list, review & coordinate House Blessing visits, hide/moderate reported posts, pin announcements. |
+| **Coordinator / Leader** | `Area Coordinator` / `Dance Leader` | All Devotee permissions + create area chapter events/rehearsals, manage dance group member lists, pin area notices. |
+| **Super Admin** | `Administrator` | Full system administration, role assignment, content moderation, system configuration. |
 
 ---
 
 ## 3. Responsive UX & Layout Architecture
 
 ### 3.1 Mobile Viewport (`< 768px`)
-- **Sticky Top Bar:** Santo Niño NZ branding (`👑`), global search shortcut, and notification bell (`🔔`).
-- **Devotional Stories Carousel:** Horizontal card strip directly below header:
+- **Sticky Top Bar:** Santo Niño NZ branding (`👑`), search shortcut, and notification bell (`🔔`).
+- **Devotional Stories Carousel:** Horizontal card strip directly below header with touch-scroll snapping:
   - *Today's Novena* (Day X of 9 progress)
   - *Daily Gospel / Reading*
   - *Fiesta 2027 Countdown*
   - *Add Story / Photo*
-- **Main Stream:** Single-column timeline with rich cards (Social Posts, Prayer Cards, Event RSVPs).
+- **Main Stream:** Single-column timeline with rich cards (Social Posts, Prayer Cards, YouTube Festival Videos, Event RSVPs).
 - **Streamlined 4-Tab Bottom Navigation:**
   1. `🏠 Feed`: Main community stream, composer, and devotion stories.
   2. `📅 Events`: Mass schedules, Sinulog rehearsal calendar, RSVP tracking.
@@ -46,9 +54,9 @@ Additionally, the architecture is specifically optimized for **Supabase Free Tie
 ### 3.2 Desktop Viewport (`≥ 768px`)
 A full 3-column Facebook-style layout:
 - **Left Sidebar (`w-64`):**
-  - Navigation shortcuts (`Feed`, `Events Calendar`, `Novena Prayers`, `House Blessing Visits`).
-  - Area chapters (`Auckland Central`, `North Shore`, `West Auckland`).
-  - Ministry groups (`Sinulog Dance Troupe`, `Sinulog Queen Committee`, `Hermano Council`).
+  - Navigation shortcuts (`Community Feed`, `Mass & Event Schedules`, `Daily 9-Day Novena`, `House Blessing Visits`).
+  - Area chapters (`Auckland Central`, `North Shore`, `West Auckland`, `South Auckland`).
+  - Ministry groups (`Sinulog Dance Troupe`, `Sinulog Drummers & Brass`, `Hermano Council`).
 - **Center Stream (`max-w-2xl`):**
   - Devotional Stories Bar.
   - Post Composer with quick triggers (`📷 Photo`, `🎬 YouTube Video`, `🙏 Request Prayer`).
@@ -63,132 +71,260 @@ A full 3-column Facebook-style layout:
 ## 4. Feature Specifications
 
 ### 4.1 Post Composer & Media Pipeline
-- **Composer Modes:**
+- **Composer Modes (Unified Modal):**
   1. **General Reflection / Update:** Devotee message with optional photo attachments.
-  2. **Prayer Intention Request:** Dedicated modal selecting category (*Healing*, *Thanksgiving*, *Special Intention*, *Eternal Repose*), optional privacy toggle (Public vs Hermanos Only).
-  3. **Event Announcement:** (Restricted to Hermanos/Coordinators/Admins) with event title, date/time, venue address, and RSVP limit.
-- **Media Optimization (Free Tier Guard):**
-  - **Photos:** Handled via browser-side WebP compression (`max 300KB` per image, max 4 images per post) before upload to Supabase Storage bucket `community-media`.
-  - **Videos:** Handled via **YouTube URL Embedding**. Devotees paste any standard YouTube or Shorts URL (`youtube.com/watch?v=...` or `youtu.be/...`). The client parses the video ID and renders a native-feeling 16:9 embedded player with zero Supabase storage or bandwidth consumption.
+  2. **Prayer Intention Request:** Dedicated fields selecting intention category (*Healing*, *Thanksgiving*, *Special Intention*, *Eternal Repose*), with privacy visibility (`public` vs `hermanos_only`).
+  3. **Official Announcement & Event:** (Restricted to Hermanos/Coordinators/Admins) with announcement type (`general`, `casting_call`), pinned status, and optional event link.
+  4. **YouTube Embed Mode:** Paste any YouTube or YouTube Shorts URL for free high-definition video streaming.
 
-### 4.2 Interactive Novena & Hymn Experience
+---
+
+## 5. Zero-Cost Media Storage Architecture (Free Tier Safeguards)
+
+To ensure the platform operates sustainably on free tiers without billing risk, the media architecture avoids Supabase's strict **1 GB storage** and **2 GB/month egress bandwidth** caps.
+
+### 5.1 Media Strategy Matrix
+
+| Media Type | Storage / Delivery Provider | Free Tier Allowance | Bandwidth / Egress Cost | Implementation Details |
+| :--- | :--- | :--- | :--- | :--- |
+| **Videos** | **YouTube Embeds** | **Unlimited** | **$0 (Zero Egress)** | Devotees paste YouTube or Shorts URLs. Client extracts video ID and renders a responsive 16:9 iframe embed (`youtube-nocookie.com`). Zero storage and zero bandwidth hit on app infrastructure. |
+| **Audio (Hymns)** | **GitHub Pages (`/public/audio/`)** | **100 GB/month** | **$0 (Zero Egress)** | Static hymn files (e.g. *Bato Balani sa Gugma* MP3) are bundled in the repository's `public/audio/` directory. GitHub Pages serves static audio directly to clients with high transfer allowance. |
+| **Photos (Primary)** | **Cloudflare R2** | **10 GB Storage** | **$0 (Zero Egress Fee)** | Industry standard for free media hosting. S3-compatible API. Cloudflare waives all egress/bandwidth fees entirely. Direct upload via presigned URL or worker proxy. |
+| **Photos (Alternative)** | **ImageKit.io** or **Supabase + Cloudflare CDN** | **20 GB / 1 GB Storage** | **Cached at Edge** | Fallback option: If using Supabase Storage, a free Cloudflare CDN proxy caches images to prevent consuming Supabase's 2 GB monthly egress. |
+
+### 5.2 Mandatory Client-Side WebP Compression
+Regardless of the photo storage backend:
+- All photos undergo browser-side canvas compression before upload.
+- **Specifications:** Max dimension 1200px (width or height), converted to `image/webp` at `0.75` quality.
+- **Result:** Average photo payload is reduced from 4–8 MB down to **80 KB – 180 KB** (over 95% bandwidth reduction).
+- Max 4 photos per post.
+
+---
+
+## 6. Faith Identity, Honor Badges & Yearly Festival Roles
+
+Community devotion and Sinulog festival engagement span years of volunteerism, performance, sacred liturgy, and community patronage. The app recognizes this through a **multi-tiered Badge & Honor Ribbons system** displayed on user profiles, post avatars, and comments.
+
+### 6.1 Badge Taxonomy & Categories
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       FAITH & FESTIVAL BADGE TAXONOMY                       │
+├──────────────────────┬──────────────────────┬───────────────────────────────┤
+│ 1. CLERGY & LITURGY  │ 2. FESTIVAL ROLES    │ 3. CREATIVE & PRODUCTION      │
+│  • Bishop / Priest   │  • Sinulog Dancer    │  • Official Photographer      │
+│  • Deacon / Lay Min. │  • Dance Competitor  │  • Videographer / Media       │
+│  • Hermano Major     │  • Miss Sinulog / Qn │  • Sound, Lights & Stage      │
+├──────────────────────┼──────────────────────┼───────────────────────────────┤
+│ 4. PARTNERS & VENDORS│ 5. DEVOTIONAL STREAKS│ 6. LEADERSHIP & SERVICE       │
+│  • Festival Vendor   │  • 9-Day Novena Done │  • Area Coordinator           │
+│  • Food/Merch Booth  │  • Pilgrim Host      │  • Dance Troupe Leader        │
+│  • Fiesta Sponsor    │  • Chapter Pioneer   │  • Hermana Council Member     │
+└──────────────────────┴──────────────────────┴───────────────────────────────┘
+```
+
+#### Detailed Badge Types
+
+| Category | Badge Title | Repeatable by Year? | Icon | Description & Example |
+| :--- | :--- | :---: | :---: | :--- |
+| **Clergy & Liturgy** | **Bishop / Priest** | No (Standing) | ✝️ | Ordained celebrants presiding over Holy Mass & blessings. |
+| **Clergy & Liturgy** | **Deacon / Lay Minister** | No (Standing) | 🕊️ | Liturgical ministers assisting with communion and blessings. |
+| **Clergy & Liturgy** | **Hermano / Hermana Major** | Yes (`year`) | 👑 | Spiritual heads/hosts for the festival year (e.g. *Hermano Major 2026*). |
+| **Performance** | **Sinulog Dancer** | Yes (`year`) | 💃 | Dancers participating in the grand street dance (e.g. *Dancer '24, '25, '26*). |
+| **Performance** | **Dance Troupe Competitor** | Yes (`year`) | 🏆 | Members competing in the Sinulog Dance Competition (with troupe name). |
+| **Pageant** | **Sinulog Festival Queen / Miss Sinulog** | Yes (`year`) | 👸 | Pageant candidates, runners-up, and crowned titleholders (e.g. *Queen 2025*). |
+| **Performance** | **Drummers & Brass Musician** | Yes (`year`) | 🥁 | Percussionists and brass instrumentalists providing Sinulog rhythm. |
+| **Creative Guild** | **Official Photographer** | Yes (`year`) | 📸 | Accredited volunteer photographers capturing liturgical & festival events. |
+| **Creative Guild** | **Official Videographer** | Yes (`year`) | 🎥 | Videographers documenting dances, novena masses, and recaps. |
+| **Community & Commerce** | **Festival Partner / Vendor** | Yes (`year`) | 🛍️ | Official food, merchandise, and retail stallholders at Sinulog festivities. |
+| **Community & Commerce** | **Festival Sponsor / Benefactor** | Yes (`year`) | 🤝 | Community businesses and donors sponsoring events (Gold, Silver, Bronze). |
+| **Devotional** | **9-Day Novena Completer** | Yes (`year`) | 📿 | Devotees who complete all 9 days of the official annual Novena. |
+| **Devotional** | **Pilgrim Image Host** | Yes (`year`) | 🏠 | Families hosting the sacred Pilgrim Image of Santo Niño for house visits. |
+| **Community Service** | **Sinulog Contributor / Volunteer**| Yes (`year`) | 🌟 | Logistics volunteers, food committee, marshals, and coordinators. |
+
+### 6.2 UX Placement & Badge Display
+1. **Feed & Comment Flair:**
+   - Beside the user's name on posts and comments, their primary/featured badge appears as a compact tag:
+     - `Maria Santos-Cruz [Verified Hermana]`
+     - `Fr. Mario [✝️ Priest]`
+     - `Elijah Mondero [💃 Dancer '24, '25, '26]`
+     - `Jun Santos [📸 Official Photographer '26]`
+     - `Kanto Grill NZ [🛍️ Food Vendor '26]`
+2. **Profile "Honor Ribbons" Shelf:**
+   - On the Devotee's profile header, a dedicated visual shelf displays all earned badges grouped by year.
+   - Tapping any badge opens a modal showing verified details (e.g., *"Sinulog Festival Queen 2025 — Auckland Chapter, 1st Runner Up"*).
+3. **Yearly Archive & Directory Filter:**
+   - The community directory allows filtering by badge and year:
+     - *"View all Sinulog 2026 Dancers"*
+     - *"Directory of 2026 Food & Merch Vendors"*
+     - *"Media Guild: Photographers & Videographers"*
+
+---
+
+## 7. Devotional Features & Sacred Practices
+
+### 7.1 Interactive Novena & Hymn Experience
 - **9-Day Novena Guide:**
-  - Day selector (Day 1 through Day 9) with visual completion indicator.
+  - Day selector (Day 1 through Day 9) with visual completion progress dots.
   - Opening prayers, daily reflection, petitions, and litany.
-  - Embedded audio player for *Bato Balani sa Gugma* with synchronized lyrics and wave animation.
-  - **"Mark Day as Completed"** action: Updates member's personal streak and prompts optional one-tap share to feed: *"Just completed Day 3 of the Santo Niño Novena! Viva Pit Señor! 📿"*.
+  - Embedded audio player for *Bato Balani sa Gugma* with synchronized lyrics.
+  - **"Mark Day as Completed":** Persists completion to `novena_progress` and offers a 1-tap feed share badge: *"Just completed Day 3 of the Santo Niño Novena! Viva Pit Señor! 📿"*.
 
-### 4.3 Community Prayer Intentions Board
-- Intentions posted on the feed appear as high-visibility devotional cards.
-- **"🙏 Amen / Praying"** interaction: Tapping adds to the live prayer count and notifies the author: *"Brother Jun and 14 others prayed for your intention"*.
-- Hermanos can filter and export intentions into the liturgical prayer list for the upcoming Saturday Novena Mass.
+### 7.2 Community Prayer Intentions & Saturday Mass Integration
+- Intentions posted on the feed appear as high-visibility devotional cards with distinct category tags (*🙏 Healing*, *🎉 Thanksgiving*, *🕊️ Eternal Repose*).
+- **"🙏 Amen / I Prayed"** interaction: Tapping adds to the live prayer count and notifies the author: *"Brother Jun and 14 others prayed for your intention"*.
+- **Liturgical Export:** Hermanos have a 1-click feature to export all public intentions submitted during the week into the formal prayer petition list for the Saturday Novena Mass.
 
-### 4.4 Events & Sinulog Practice Schedules
+### 7.3 House Visits & Pilgrim Image Booking
+- Public intentions appear on the social feed.
+- Private house visits (Pilgrim Image home enthronement, house blessings, sick pastoral calls) remain securely routed to area Hermanos via the `requests` table with address and preferred timeslot details.
+
+### 7.4 Events & Sinulog Practice Schedules
 - Event cards with venue map preview, date/time badge, and RSVP status (`Going`, `Interested`, `Can't Go`).
 - Attendee avatar preview (e.g. *"Maria, Jun, and 28 others are attending"*).
 - One-tap "Add to Device Calendar" (`.ics` generation or Google Calendar link).
 
-### 4.5 User Profile & Faith Identity
-- **Header:** Cover photo, avatar, verified servant badge (e.g. `Verified Hermana`), area chapter, and bio.
-- **Devotional Badges:** Area chapter, Novena completion streaks, Pilgrim Image host history.
-- **Profile Tabs:**
-  - `Posts`: User's feed contributions and shared photos.
-  - `Intentions`: Prayer requests authored by the user (with ability to mark as *"Answered / Thanksgiving"*).
-  - `Events Attending`: Upcoming events the user is attending.
-  - `About`: Chapter affiliation and volunteer details.
-
-### 4.6 Moderation & Safety
-- Devotees can report posts via `••• -> Report Content`.
-- Hermanos, Coordinators, and Admins have inline moderation controls:
-  - `Hide Post from Community Feed`
-  - `Delete Post`
-  - `Pin Announcement to Top of Feed`
-
 ---
 
-## 5. Phased Roadmap
+## 8. Phased Roadmap
 
 - **Phase 1 (Current Scope):**
-  - 4-tab mobile navigation and 3-column desktop layout.
-  - Post composer with text, compressed photos, and YouTube video embeds.
+  - Pivot root layout to 4-tab mobile navigation and 3-column desktop layout.
+  - Deprecate `/announcements` and unify announcements/casting calls into feed posts.
+  - Post composer with text, WebP compressed photos, and YouTube video embeds.
   - Feed interactions: Comments, reactions (*🙏 Amen*, *❤️ Care*, *👍 Like*), native Web Share.
   - Interactive Novena reader with audio hymn player and completion sharing.
-  - Prayer intentions wall and Saturday Mass prayer collection.
+  - Prayer intentions wall and Saturday Mass prayer collection export.
   - Events calendar and RSVP system.
-  - Devotee user profiles with badges and chapter tags.
+  - Multi-tier Honor Badges & yearly festival roles displayed on profiles and post flairs.
   - Hermano/Admin moderation controls.
 
 - **Phase 2 (Future Scope):**
   - Realtime direct messaging (DMs) between Devotees and Hermanos/Coordinators.
   - Push notifications via Web Push API.
-  - Automated prayer intention reminders.
+  - Automated prayer intention reminders before Saturday Mass.
 
 ---
 
-## 6. Database Schema Extensions (Supabase / PostgreSQL)
+## 9. Database Schema Extensions (Supabase / PostgreSQL)
 
-Existing tables in project: `profiles`, `areas`, `dance_groups`, `user_roles`, `sinulog_queens`.
+Existing tables in project: `profiles`, `areas`, `dance_groups`, `user_roles`, `sinulog_queens`, `requests` (for house visits/confidential requests), `events`.
 
-### New Tables to Add:
-1. **`posts`**
-   - `id` (uuid, primary key)
-   - `author_id` (uuid, references `profiles.id`)
-   - `post_type` (text: `general`, `prayer_request`, `event`, `novena_completion`)
-   - `content` (text)
-   - `media_urls` (text array, Supabase storage URLs for photos)
-   - `youtube_video_id` (text, nullable)
-   - `intention_category` (text, nullable: `healing`, `thanksgiving`, `special`, `repose`)
-   - `is_pinned` (boolean, default false)
-   - `is_hidden` (boolean, default false)
-   - `created_at` (timestamp with time zone)
-   - `updated_at` (timestamp with time zone)
+### 1. `posts` (Community Feed)
+```sql
+CREATE TABLE posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  author_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  post_type TEXT NOT NULL,                  -- 'general', 'prayer_request', 'event', 'announcement', 'novena_completion'
+  content TEXT NOT NULL,
+  media_urls TEXT[] DEFAULT '{}',           -- Storage URLs for photos (Cloudflare R2 or WebP bucket)
+  youtube_video_id TEXT,                    -- YouTube video/short ID
+  intention_category TEXT,                  -- 'healing', 'thanksgiving', 'special', 'repose'
+  announcement_type TEXT,                   -- 'general', 'casting_call', 'urgent'
+  event_id UUID REFERENCES events(id),      -- Optional link to event
+  visibility TEXT DEFAULT 'public',         -- 'public', 'hermanos_only'
+  is_pinned BOOLEAN DEFAULT false,
+  is_hidden BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
 
-2. **`post_reactions`**
-   - `id` (uuid, primary key)
-   - `post_id` (uuid, references `posts.id` on delete cascade)
-   - `user_id` (uuid, references `profiles.id`)
-   - `reaction_type` (text: `amen`, `heart`, `like`)
-   - `created_at` (timestamp)
-   - *Unique constraint:* `(post_id, user_id)`
+### 2. `badge_definitions` & `user_badges` (Faith Identity & Yearly Honors)
+```sql
+-- Badge definitions catalog
+CREATE TABLE badge_definitions (
+  id TEXT PRIMARY KEY,                      -- e.g. 'priest', 'sinulog_dancer', 'festival_queen', 'photographer', 'festival_vendor'
+  name TEXT NOT NULL,                       -- e.g. 'Sinulog Dancer'
+  category TEXT NOT NULL,                   -- 'clergy', 'performance', 'pageant', 'media', 'partner', 'devotional'
+  icon TEXT NOT NULL,                       -- e.g. '✝️', '💃', '👸', '📸', '🛍️', '📿'
+  description TEXT,
+  is_repeatable_yearly BOOLEAN DEFAULT true,-- whether badge can be awarded in multiple years
+  badge_color TEXT DEFAULT 'amber',         -- 'gold', 'red', 'purple', 'emerald', 'blue'
+  is_verified_only BOOLEAN DEFAULT true     -- requires admin/coordinator approval
+);
 
-3. **`post_comments`**
-   - `id` (uuid, primary key)
-   - `post_id` (uuid, references `posts.id` on delete cascade)
-   - `author_id` (uuid, references `profiles.id`)
-   - `content` (text)
-   - `created_at` (timestamp)
+-- User awarded badges
+CREATE TABLE user_badges (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  badge_id TEXT NOT NULL REFERENCES badge_definitions(id) ON DELETE CASCADE,
+  year INTEGER,                             -- e.g. 2024, 2025, 2026 (null for standing roles like clergy)
+  title_override TEXT,                      -- e.g. "Lead Dancer", "Official Videographer", "Fiesta Gold Sponsor"
+  organization_or_troupe TEXT,             -- e.g. "Auckland Youth Troupe", "Kanto Grill NZ"
+  metadata JSONB DEFAULT '{}',              -- e.g. { "placement": "1st Runner Up", "booth_number": "B12" }
+  is_featured BOOLEAN DEFAULT true,         -- show as flair beside name on posts/comments
+  awarded_by UUID REFERENCES profiles(id),
+  awarded_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, badge_id, year)
+);
+```
 
-4. **`novena_progress`**
-   - `id` (uuid, primary key)
-   - `user_id` (uuid, references `profiles.id`)
-   - `day_number` (int, 1 to 9)
-   - `completed_at` (timestamp)
-   - `cycle_year` (int, e.g. 2026)
-   - *Unique constraint:* `(user_id, day_number, cycle_year)`
+### 3. `post_reactions`
+```sql
+CREATE TABLE post_reactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  reaction_type TEXT NOT NULL,              -- 'amen', 'heart', 'like'
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(post_id, user_id)
+);
+```
 
-5. **`event_rsvps`**
-   - `id` (uuid, primary key)
-   - `event_id` (uuid, references `events.id`)
-   - `user_id` (uuid, references `profiles.id`)
-   - `status` (text: `going`, `interested`, `declined`)
-   - `created_at` (timestamp)
-   - *Unique constraint:* `(event_id, user_id)`
+### 4. `post_comments`
+```sql
+CREATE TABLE post_comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  author_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### 5. `novena_progress`
+```sql
+CREATE TABLE novena_progress (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  day_number INTEGER NOT NULL CHECK (day_number BETWEEN 1 AND 9),
+  cycle_year INTEGER NOT NULL,              -- e.g. 2026
+  completed_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, day_number, cycle_year)
+);
+```
+
+### 6. `event_rsvps`
+```sql
+CREATE TABLE event_rsvps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  status TEXT NOT NULL,                     -- 'going', 'interested', 'declined'
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(event_id, user_id)
+);
+```
 
 ---
 
-## 7. Verification & Success Criteria
+## 10. Verification & Success Criteria
 
 1. **Responsive Verification:**
-   - On screens `< 768px`: bottom navigation bar renders 4 tabs (`Feed`, `Events`, `Prayers`, `Menu`), desktop sidebars are hidden.
-   - On screens `≥ 768px`: 3-column layout displays navigation on left, feed in middle, devotion/event widgets on right.
+   - `< 768px`: 4-tab bottom navigation (`Feed`, `Events`, `Novena`, `Menu`), desktop sidebars hidden.
+   - `≥ 768px`: 3-column layout (shortcuts on left, central feed, devotion/event widgets on right).
 2. **Posting & Free-Tier Media:**
-   - Creating a post with a YouTube link embeds a playable YouTube iframe.
-   - Attaching an image compresses the file before saving to storage bucket.
-3. **Prayer & Novena Flow:**
-   - Devotees can navigate days 1-9 of the Novena and play *Bato Balani sa Gugma*.
-   - Marking a day completed saves to `novena_progress` and offers 1-tap feed share.
-   - Prayer intention posts display with *"🙏 Amen"* button and live count.
-4. **Events & RSVPs:**
-   - Events render with date/venue and interactive RSVP toggle (`Going` / `Interested`).
-5. **User Profile:**
-   - Profile renders cover, avatar, devotee role badge, and history tabs.
+   - Posting a YouTube link embeds a responsive 16:9 player without third-party video storage.
+   - Uploading a photo triggers browser-side WebP compression (< 200 KB) before saving to R2/storage.
+3. **Badge & Faith Identity Verification:**
+   - Profile header renders the "Honor Ribbons" shelf with active badges, icons, and year badges.
+   - Posts and comments display the primary featured badge tag next to the author's name.
+4. **Prayer & Novena Flow:**
+   - Devotees can navigate days 1–9 of the Novena, stream *Bato Balani sa Gugma*, and mark days complete.
+   - Marking completion creates a streak record and optional feed badge.
+   - Prayer intention cards support *"🙏 Amen"* interaction with live counter updates.
+5. **Events & RSVPs:**
+   - Events render with date/venue badges and interactive RSVP toggle (`Going` / `Interested`).
+6. **Static Export Build Integrity:**
+   - All dynamic routes configure `dynamicParams = false` and `generateStaticParams()` to ensure `npm run build` succeeds under Next.js `output: 'export'`.

@@ -27,6 +27,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { hasPermission, getActiveRoles } from '@/lib/permissions';
 import { eventsApi, type EventWithDetails } from '@/lib/supabase-api';
+import EventCalendar from '@/components/EventCalendar';
 import type { EventType } from '@/types';
 
 const { Title, Text, Paragraph } = Typography;
@@ -285,11 +286,9 @@ export default function EventsPage() {
           )}
         </Spin>
       ) : (
-        <Card>
-          <div className="h-96 flex items-center justify-center bg-gray-50 rounded">
-            <Text type="secondary">Calendar view coming soon</Text>
-          </div>
-        </Card>
+        <Spin spinning={loading}>
+          <EventCalendar events={events} />
+        </Spin>
       )}
     </div>
   );
