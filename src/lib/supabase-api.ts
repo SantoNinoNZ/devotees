@@ -978,7 +978,7 @@ export const communityFeedApi = {
             id,
             display_name,
             avatar_url,
-            user_badges:user_badges(
+            user_badges:user_badges!user_badges_user_id_fkey(
               id,
               user_id,
               badge_id,
@@ -1053,7 +1053,7 @@ export const communityFeedApi = {
             id,
             display_name,
             avatar_url,
-            user_badges:user_badges(
+            user_badges:user_badges!user_badges_user_id_fkey(
               id,
               user_id,
               badge_id,
@@ -1205,7 +1205,7 @@ export const communityFeedApi = {
             id,
             display_name,
             avatar_url,
-            user_badges:user_badges(
+            user_badges:user_badges!user_badges_user_id_fkey(
               id,
               user_id,
               badge_id,
@@ -1253,7 +1253,7 @@ export const communityFeedApi = {
           id,
           display_name,
           avatar_url,
-          user_badges:user_badges(
+          user_badges:user_badges!user_badges_user_id_fkey(
             id,
             user_id,
             badge_id,

@@ -309,7 +309,10 @@ export default function CommunityFeedPage() {
       setIsLoadingFeed(true);
       const fetched = await communityFeedApi.getFeedPosts({ limit: 25 });
       if (fetched && fetched.length > 0) {
-        setPosts(fetched);
+        // Prepend real Supabase posts and retain sample cards below for complete UI fidelity
+        const existingIds = new Set(fetched.map((p) => p.id));
+        const extraSamples = INITIAL_SAMPLE_POSTS.filter((s) => !existingIds.has(s.id));
+        setPosts([...fetched, ...extraSamples]);
       }
     } catch {
       // Fallback already pre-set to INITIAL_SAMPLE_POSTS

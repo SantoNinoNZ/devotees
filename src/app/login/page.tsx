@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Card, Button, Typography, Space, Divider } from 'antd';
 import { GoogleOutlined } from '@ant-design/icons';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,8 +42,15 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <Card className="w-full max-w-md shadow-lg">
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#B91C1C] flex items-center justify-center text-white text-2xl font-bold">
-            SN
+          <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-500/20 to-red-800/30 border border-amber-300/60 flex items-center justify-center p-2 shadow-sm ring-2 ring-amber-100 overflow-hidden">
+            <Image
+              src="/santonino-statue.png"
+              alt="Señor Santo Niño"
+              width={64}
+              height={64}
+              className="object-contain h-full w-auto drop-shadow"
+              priority
+            />
           </div>
           <Title level={2} className="mb-2">
             Santo Niño NZ

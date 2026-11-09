@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Dropdown, type MenuProps } from 'antd';
 import {
   BellOutlined,
@@ -113,8 +114,15 @@ export function Header({
         {/* Brand & Logo */}
         <div className="flex items-center space-x-3">
           <Link href="/" className="flex items-center space-x-2.5 group no-underline">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-red-800 flex items-center justify-center text-white shadow-sm ring-2 ring-amber-200">
-              <span className="text-xl">👑</span>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-red-800/30 border border-amber-300/50 flex items-center justify-center shadow-sm ring-1 ring-amber-200 overflow-hidden p-0.5">
+              <Image
+                src="/santonino-statue.png"
+                alt="Señor Santo Niño"
+                width={36}
+                height={36}
+                className="object-contain h-full w-auto drop-shadow"
+                priority
+              />
             </div>
             <div>
               <div className="font-cinzel font-bold text-base sm:text-lg text-red-900 tracking-wider leading-none">
